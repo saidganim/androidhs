@@ -58,8 +58,8 @@ void egl_setup() {
     
     EGLint pBuffer_attribs[] =
     {
-        EGL_WIDTH, 128,
-        EGL_HEIGHT, 1024,
+        EGL_WIDTH, 32,
+        EGL_HEIGHT, 32,
         EGL_TEXTURE_TARGET, EGL_NO_TEXTURE,
         EGL_TEXTURE_FORMAT, EGL_NO_TEXTURE,
         EGL_NONE
@@ -171,67 +171,69 @@ int main(){
 	glBindFramebuffer(GL_FRAMEBUFFER, FBF);
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, readval);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, readval);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0); 
 	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"
 				<< std::endl;
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, FBF);
-
-	glGenTextures(1, &tex2);
-	glBindTexture(GL_TEXTURE_2D, tex2);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, 32, 32, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, textures_data);
-
-	
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), some_data, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	//glActiveTexture(GL_TEXTURE0);
-	
-	
-	
 	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	// tex_uniform_location = glGetUniformLocation(shaderProgram, "u_texture");
-	// glUniform1fv(tex_uniform_location, 4096 / sizeof(float), textures_data);
 
-	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd");
-	glUniform2f(tex_uniform_location, rndX,  rndY);
-	// }
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	glUseProgram(shaderProgram);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-     std::cout <<readval[0][0] <<" Hello world\n";
-	// glReadBuffer(GL_COLOR_ATTACHMENT0);
-	memset(readval, 0x00, 32 * 32 * sizeof(unsigned int));
-	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_INT, &readval);
+	// glBindFramebuffer(GL_FRAMEBUFFER, FBF);
+
+	// glGenTextures(1, &tex2);
+	// glBindTexture(GL_TEXTURE_2D, tex2);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, 32, 32, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, textures_data);
+
+	
+	// glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	// glClear(GL_COLOR_BUFFER_BIT);
+	// glGenVertexArrays(1, &VAO);
+	// glBindVertexArray(VAO);
+	// glGenBuffers(1, &VBO);
+	// glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), some_data, GL_STATIC_DRAW);
+	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// glEnableVertexAttribArray(0);
+	// //glActiveTexture(GL_TEXTURE0);
+	
+	
+	
+	// // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// // tex_uniform_location = glGetUniformLocation(shaderProgram, "u_texture");
+	// // glUniform1fv(tex_uniform_location, 4096 / sizeof(float), textures_data);
+
+	// tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd");
+	// glUniform2f(tex_uniform_location, rndX,  rndY);
+	// // }
+	// glBindBuffer(GL_ARRAY_BUFFER, 0);
+	// glBindVertexArray(0);
+	// glUseProgram(shaderProgram);
+	// glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+	// glDrawArrays(GL_TRIANGLES, 0, 3);
+    //  std::cout <<readval[0][0] <<" Hello world\n";
+	// // glReadBuffer(GL_COLOR_ATTACHMENT0);
+	unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
+	memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
+	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
 	// glReadBuffer(GL_BACK);
 	printf("READVALS: \n");
 	// glfwSwapBuffers(display);
 	for(int  i = 0; i < 32; ++i){
 		for( int j = 0; j < 32; ++j){
-			printf("0x%6x\n", readval[i][j]);
+			printf("0x%6x\n", frame[i * 32 + j]);
 		}
 		printf("=======================\n");
 	}
