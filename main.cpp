@@ -7,6 +7,32 @@ EGLDisplay display;
 EGLSurface pBuffer;
 EGLContext ctx;
 
+ struct pagemap_entry{
+    uint64_t pfn : 54;
+    unsigned int soft_dirty : 1;
+    unsigned int file_page : 1;
+    unsigned int swapped : 1;
+    unsigned int present : 1;
+};
+
+void* read_entry(int fd, void* va){
+	uint64_t data;
+	struct pagemap_entry res;
+	uint64_t pfn;
+	if(sizeof(data) > pread(fd, &data, sizeof(data), (uint64_t)va / sysconf(_SC_PAGESIZE) * sizeof(uint64_t))){
+		printf("COULDN'T READ FROM PAGEMAP %p\n", va);
+		exit(1);
+	};
+	pfn = data & (((uint64_t)1 << 54) - 1);
+	
+	// res.pfn = data & (((uint64_t)1 << 54) - 1);
+    // res.soft_dirty = (data >> 54) & 1;
+    // res.file_page = (data >> 61) & 1;
+    // res.swapped = (data >> 62) & 1;
+    // res.present = (data >> 63) & 1;
+	return (void*)( pfn * sysconf(_SC_PAGE_SIZE)) + ((uint64_t)va % sysconf(_SC_PAGE_SIZE));
+}
+
 const char *vertexShaderSource = "#version 300 es\n"
     "layout (location = 0) in vec3 aPos;\n"
 	"uniform vec2 a_rnd;\n"
