@@ -2,3 +2,9 @@
 ./build
 adb push obj/local/armeabi-v7a/main.out /data/local/tmp/mike/main.out
 adb shell  "su -c '/data/local/tmp/mike/main.out'"
+adb shell 'su -c "chown shell /data/local/tmp/mike/kgsl.csv"'
+adb shell 'su -c "chown shell /data/local/tmp/mike/pagemap.dump"'
+adb shell 'su -c "chown shell /data/local/tmp/mike/prog.out"'
+adb pull /data/local/tmp/mike/pagemap.dump
+adb pull /data/local/tmp/mike/kgsl.csv
+adb pull /data/local/tmp/mike/prog.out

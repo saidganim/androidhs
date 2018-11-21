@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <math.h>
 
 EGLDisplay display;
 EGLSurface pBuffer;
@@ -28,7 +29,7 @@ struct kgsl_entry {
 	void* kgsl_va;		// no comments...
 	void* kgsl_pa;		// will be filled by us during one-way lookup
 	size_t kgsl_size;	// no comments...
-	uint64_t kgsl_id;	// id of GL object
+	int kgsl_id;	// id of GL object
 	char kgsl_flags[50];	// permissions mode
 	char kgsl_type[50];	// in our case everything is gpumem
 	char kgsl_usage[50];	// no comments...
@@ -167,8 +168,10 @@ int main(){
 	 *  b440c000 b440c000     4096    54 ----pY     gpumem           any(0)     1
 	 */
 
-	
+	char filebuffer[1024];
 	int pagemap_f = open("/proc/self/pagemap", O_RDONLY);
+	FILE* pagemap_f2 = fopen("/proc/self/pagemap", "r");
+	FILE*  progout = fopen("/data/local/tmp/mike/prog.out", "w");
 	char kgsl_path[100]; // no buffer overwlof here, please:)
 	struct kgsl_entry *kgsl_arr = NULL;
 	struct kgsl_entry kgsl_cur;
@@ -176,8 +179,9 @@ int main(){
 	sprintf(kgsl_path, "/d/kgsl/proc/%d/mem", self);
 	FILE* kgsl_f = fopen(kgsl_path, "r");
 	size_t cur_i = 0;
-
-
+	FILE* pagemap_csv = fopen("/data/local/tmp/mike/pagemap.dump", "w");
+	FILE* kgsl_csv = fopen("/data/local/tmp/mike/kgsl.csv", "w");
+	printf("SELF ID : %d\n", self);
 	// STAGE #1
 
 	memset(textures_data, 0x41, 4096);
@@ -237,7 +241,7 @@ int main(){
 	}
 	uint32_t ttmp = 0;
 	// TEXTURE
-	for(int i = 0; i < 60000; ++i){
+	for(int i = 0; i < 50000; ++i){
 		glGenTextures(1, &tex2[i]);
 		glBindTexture(GL_TEXTURE_2D, tex2[i]);
 		ttmp = ttmp + rndX + rndY;
@@ -279,6 +283,7 @@ int main(){
 		exit(1);
 	}
 	fseek(kgsl_f, 73, SEEK_SET);
+	fwrite("gpuaddr,useraddr,size,id,flags,type,usage,sglen\n", 1, 47, kgsl_csv);
 	while(fscanf(kgsl_f, "%p %p     %lu    %lu  %s      %s            %s %lu\n", &kgsl_cur.kgsl_gpu_va,
 									 	&kgsl_cur.kgsl_va, &kgsl_cur.kgsl_size, &kgsl_cur.kgsl_id, kgsl_cur.kgsl_flags,
 										kgsl_cur.kgsl_type, kgsl_cur.kgsl_usage, &kgsl_cur.kgsl_sglen) != EOF){
@@ -287,13 +292,12 @@ int main(){
 		// we have texture
 		kgsl_cur.kgsl_pa = (void*)read_entry(pagemap_f, (void*)kgsl_cur.kgsl_va);
 		
-	//	printf("%p %p     %lu    %3lu ", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
-          //      printf("%s      ", kgsl_cur.kgsl_flags);
-            //    printf("%s            ", kgsl_cur.kgsl_type);
-              //  printf("%s ", kgsl_cur.kgsl_usage);
-                //printf("%lu -- [physaddr:%p; virtualaddr:%p]\n", kgsl_cur.kgsl_sglen, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_va);
-                //fflush(stdout);
-	
+		fprintf(kgsl_csv,"%p,%p,%lu,%3lu,", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
+                fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_flags);
+                fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_type);
+                fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_usage);
+                fprintf(kgsl_csv,"%lu\n", kgsl_cur.kgsl_sglen);
+		
 		struct kgsl_entry** kgsl_ptr = &kgsl_arr;		
 		while(*kgsl_ptr){
 			if((*kgsl_ptr) && (*kgsl_ptr)->kgsl_pa > kgsl_cur.kgsl_pa)
@@ -315,31 +319,33 @@ int main(){
 		if((uint64_t)kgsl_arr->kgsl_pa - (uint64_t)first->kgsl_pa == counter * 0x1000){
 			++counter;
 		} else {
+			if( counter >= 64){
+				int target_level = 0;
+				unsigned int counter2 = counter;
+				while (counter2 >>= 1) ++target_level;
+				fprintf(progout, "NEW GROUP OF TEXTURES: \n");
+				for(int i = 0; i < counter; ++i){
+					kgsl_cur = *first;
+					fprintf(progout, "mike, %7d ,%p , %p , %4d\n", kgsl_cur.kgsl_id, kgsl_cur.kgsl_va, kgsl_cur.kgsl_pa, target_level); // only looks for order == 6
+					first = first->kgsl_next;
+				}
+				++result;
+			}
 			counter = 1;
 			first = kgsl_arr;
 		}
-		if( counter == 64){
-			for(int i = 0; i < 64; ++i){	
-				kgsl_cur = *first;
-				printf("%p %p     %8lu    %3lu ", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
-		                printf("%s      ", kgsl_cur.kgsl_flags);
-	        	        printf("%s            ", kgsl_cur.kgsl_type);
-		                printf("%s ", kgsl_cur.kgsl_usage);
-	        	        printf("%4lu -- [physaddr:%p; virtualaddr:%p]\n", kgsl_cur.kgsl_sglen, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_va);
-				fflush(stdout);
-				first = first->kgsl_next;
-			}
-			++result;
-        	        printf("============= HUGE PAGE FRAME ===============\n");
-			counter = 1;
-                        first = kgsl_arr;
-		
-		}
-			kgsl_arr = kgsl_arr->kgsl_next;
-	}
 	
+		kgsl_arr = kgsl_arr->kgsl_next;
+	}
 
-	printf("\n RESULT: %lu\n",result);
+	fseek(pagemap_f2, 0, SEEK_SET);	
+	while(int readsize = fread(filebuffer, 1, 1024, pagemap_f2)){
+		fwrite(filebuffer, 1 , 1024, pagemap_csv);
+	};
+	
+	fclose(pagemap_csv);
+	fclose(kgsl_csv);
+	fclose(progout);
 	return 0;
 
 }
