@@ -283,7 +283,7 @@ int main(){
 		exit(1);
 	}
 	fseek(kgsl_f, 73, SEEK_SET);
-	fwrite("gpuaddr,useraddr,size,id,flags,type,usage,sglen\n", 1, 47, kgsl_csv);
+	fwrite("gpuaddr,useraddr,size,id,flags,type,usage,sglen\n", 1, 48, kgsl_csv);
 	while(fscanf(kgsl_f, "%p %p     %lu    %lu  %s      %s            %s %lu\n", &kgsl_cur.kgsl_gpu_va,
 									 	&kgsl_cur.kgsl_va, &kgsl_cur.kgsl_size, &kgsl_cur.kgsl_id, kgsl_cur.kgsl_flags,
 										kgsl_cur.kgsl_type, kgsl_cur.kgsl_usage, &kgsl_cur.kgsl_sglen) != EOF){
@@ -292,7 +292,7 @@ int main(){
 		// we have texture
 		kgsl_cur.kgsl_pa = (void*)read_entry(pagemap_f, (void*)kgsl_cur.kgsl_va);
 		
-		fprintf(kgsl_csv,"%p,%p,%lu,%3lu,", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
+		fprintf(kgsl_csv,"%p,%p,%lu,%u,", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
                 fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_flags);
                 fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_type);
                 fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_usage);
@@ -314,6 +314,7 @@ int main(){
 	unsigned int result = 0;
 	struct kgsl_entry* first = kgsl_arr;
 	kgsl_arr = kgsl_arr->kgsl_next;	
+	fprintf(progout, "group_id,id,useraddr,pfn,alloc_order\n");
 	while(kgsl_arr){
 		kgsl_cur = *kgsl_arr;
 		if((uint64_t)kgsl_arr->kgsl_pa - (uint64_t)first->kgsl_pa == counter * 0x1000){
@@ -323,10 +324,10 @@ int main(){
 				int target_level = 0;
 				unsigned int counter2 = counter;
 				while (counter2 >>= 1) ++target_level;
-				fprintf(progout, "NEW GROUP OF TEXTURES: \n");
+				//fprintf(progout, "NEW GROUP OF TEXTURES: \n");
 				for(int i = 0; i < counter; ++i){
 					kgsl_cur = *first;
-					fprintf(progout, "mike, %7d ,%p , %p , %4d\n", kgsl_cur.kgsl_id, kgsl_cur.kgsl_va, kgsl_cur.kgsl_pa, target_level); // only looks for order == 6
+					fprintf(progout, "mike,%d,%p,%p,%d\n", kgsl_cur.kgsl_id, kgsl_cur.kgsl_va, kgsl_cur.kgsl_pa, target_level); // only looks for order == 6
 					first = first->kgsl_next;
 				}
 				++result;
