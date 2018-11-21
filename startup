@@ -1,0 +1,4 @@
+
+./build
+adb push obj/local/armeabi-v7a/main.out /data/local/tmp/mike/main.out
+adb shell  "su -c '/data/local/tmp/mike/main.out'"
