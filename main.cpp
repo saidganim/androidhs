@@ -182,7 +182,7 @@ int main(){
 
 	memset(textures_data, 0x41, 4096);
 	memset(readval, 0xaa, 32 * 32 * sizeof(unsigned int));
-	GLuint VBO, tex, tex2[100];
+	GLuint VBO, tex, tex2[150000];
 	// while(1){
 	
 	std::cout<<"Generated value sum==" << rndX + rndY << " ; rndX==" << rndX << "; rndY==" << rndY << "\n";
@@ -237,11 +237,11 @@ int main(){
 	}
 	uint32_t ttmp = 0;
 	// TEXTURE
-	for(int i = 0; i < 10; ++i){
+	for(int i = 0; i < 60000; ++i){
 		glGenTextures(1, &tex2[i]);
 		glBindTexture(GL_TEXTURE_2D, tex2[i]);
 		ttmp = ttmp + rndX + rndY;
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -287,12 +287,12 @@ int main(){
 		// we have texture
 		kgsl_cur.kgsl_pa = (void*)read_entry(pagemap_f, (void*)kgsl_cur.kgsl_va);
 		
-		printf("%p %p     %lu    %3lu ", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
-                printf("%s      ", kgsl_cur.kgsl_flags);
-                printf("%s            ", kgsl_cur.kgsl_type);
-                printf("%s ", kgsl_cur.kgsl_usage);
-                printf("%lu -- [physaddr:%p; virtualaddr:%p]\n", kgsl_cur.kgsl_sglen, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_va);
-                fflush(stdout);
+	//	printf("%p %p     %lu    %3lu ", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
+          //      printf("%s      ", kgsl_cur.kgsl_flags);
+            //    printf("%s            ", kgsl_cur.kgsl_type);
+              //  printf("%s ", kgsl_cur.kgsl_usage);
+                //printf("%lu -- [physaddr:%p; virtualaddr:%p]\n", kgsl_cur.kgsl_sglen, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_va);
+                //fflush(stdout);
 	
 		struct kgsl_entry** kgsl_ptr = &kgsl_arr;		
 		while(*kgsl_ptr){
@@ -306,21 +306,40 @@ int main(){
 	}
 
 	printf("\n=================================================SORTED LIST OF ENTRIES========================================\n\n");
-	
+	unsigned int counter = 1;
+	unsigned int result = 0;
+	struct kgsl_entry* first = kgsl_arr;
+	kgsl_arr = kgsl_arr->kgsl_next;	
 	while(kgsl_arr){
 		kgsl_cur = *kgsl_arr;
-		printf("%p %p     %8lu    %3lu ", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
-                printf("%s      ", kgsl_cur.kgsl_flags);
-                printf("%s            ", kgsl_cur.kgsl_type);
-                printf("%s ", kgsl_cur.kgsl_usage);
-                printf("%4lu -- [physaddr:%p; virtualaddr:%p]\n", kgsl_cur.kgsl_sglen, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_va);
-                fflush(stdout);
-
-		kgsl_arr = kgsl_arr->kgsl_next;
+		if((uint64_t)kgsl_arr->kgsl_pa - (uint64_t)first->kgsl_pa == counter * 0x1000){
+			++counter;
+		} else {
+			counter = 1;
+			first = kgsl_arr;
+		}
+		if( counter == 64){
+			for(int i = 0; i < 64; ++i){	
+				kgsl_cur = *first;
+				printf("%p %p     %8lu    %3lu ", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
+		                printf("%s      ", kgsl_cur.kgsl_flags);
+	        	        printf("%s            ", kgsl_cur.kgsl_type);
+		                printf("%s ", kgsl_cur.kgsl_usage);
+	        	        printf("%4lu -- [physaddr:%p; virtualaddr:%p]\n", kgsl_cur.kgsl_sglen, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_va);
+				fflush(stdout);
+				first = first->kgsl_next;
+			}
+			++result;
+        	        printf("============= HUGE PAGE FRAME ===============\n");
+			counter = 1;
+                        first = kgsl_arr;
+		
+		}
+			kgsl_arr = kgsl_arr->kgsl_next;
 	}
 	
 
-
+	printf("\n RESULT: %lu\n",result);
 	return 0;
 
 }
