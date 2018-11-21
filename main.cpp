@@ -3,29 +3,25 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-
-
-
 EGLDisplay display;
 EGLSurface pBuffer;
 EGLContext ctx;
 
 const char *vertexShaderSource = "#version 300 es\n"
-    // "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 0) in vec3 aPos;\n"
+	"uniform vec2 a_rnd;\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(0.0, 0.0, 0.0, 0.0);\n"
+    "   gl_Position = vec4(a_rnd.x, a_rnd.y, 0.f, 1.0);\n"
     "}\0";
 
 const char *fragmentShaderSource = "#version 300 es\n"
     "out vec4 FragColor;\n"
 	"uniform sampler2D u_texture;\n"
-	"uniform vec2 a_rnd;\n"
+	"uniform vec2 a_rnd2;\n"
     "void main()\n"
     "{\n"
-	"vec2 texcoord = vec2(a_rnd.x, a_rnd.y);\n"
-	"vec4 res = texelFetch(u_texture, ivec2(texcoord), 0);"
-    "FragColor =  vec4(1., 0., 0., 0.);\n"
+    "FragColor =  texelFetch(u_texture, ivec2(a_rnd2), 0);\n"
     "}\n\0";
 
 
@@ -101,30 +97,24 @@ void egl_setup() {
 
 int main(){
 	egl_setup();
-	
-	unsigned int* textures_data = (unsigned int*) malloc(4096 * 3);
+	unsigned int* textures_data = (unsigned int*) malloc(4096);
 	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	int shaderProgram = glCreateProgram();
+	GLuint shaderProgram = glCreateProgram();
 	GLuint VAO;
 	GLuint FBF;
 	GLint tex_uniform_location;
 	unsigned int readval[32][32];
-   
-
-	uint32_t rndX = rand() & 0b11111, rndY = rand() & 0b11111;
-
-	memset(textures_data, 0x41, 4096 * 3);
-	memset(readval, 0xaa, 32 * 32 * sizeof(unsigned int));
-	textures_data[rndX * 32 + rndY] = rndX + rndY;
-	GLuint VBO, tex, tex2;
-	// while(1){
 	int success;
     char infoLog[512];
+	uint32_t rndX = rand() & 0b11111, rndY = rand() & 0b11111;
 
-	std::cout<<"Generated value " << rndX + rndY << "\n";
-
-
+	memset(textures_data, 0x41, 4096);
+	memset(readval, 0xaa, 32 * 32 * sizeof(unsigned int));
+	GLuint VBO, tex, tex2;
+	// while(1){
+	
+	std::cout<<"Generated value sum==" << rndX + rndY << " ; rndX==" << rndX << "; rndY==" << rndY << "\n";
 
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
@@ -143,11 +133,8 @@ int main(){
     {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+		exit(1);
     }
-
-	
-	
-
 
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
@@ -157,88 +144,60 @@ int main(){
     if (!success) {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+		exit(1);
 	}
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-
-	float some_data[] = {-1.0, 1.0, 0,0,
-						1.0, 1.0, 0.0,
-						1.0, -1, 0.0};
-						// -1.0, -1.0, 0.0};
-
+	
+	// FRAMEBUFFER
 	glGenFramebuffers(1, &FBF);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBF);
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, readval);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0); 
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"
-				<< std::endl;
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!\n";
+	}
 
-	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// TEXTURE
+	glGenTextures(1, &tex2);
+	glBindTexture(GL_TEXTURE_2D, tex2);
+	uint32_t ttmp = rndX + rndY;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	// glBindFramebuffer(GL_FRAMEBUFFER, FBF);
+	// DRAWING
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+	glUseProgram(shaderProgram);
+	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd");
+	glUniform2f(tex_uniform_location, rndX / 32.f,  rndY / 32.f);
+	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd2");
+	glUniform2f(tex_uniform_location, rndX,  rndY);
+	glBindTexture(GL_TEXTURE_2D, tex2);
+	glDrawArrays(GL_POINTS, 0, 1);
 
-	// glGenTextures(1, &tex2);
-	// glBindTexture(GL_TEXTURE_2D, tex2);
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, 32, 32, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, textures_data);
-
-	
-	// glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	// glClear(GL_COLOR_BUFFER_BIT);
-	// glGenVertexArrays(1, &VAO);
-	// glBindVertexArray(VAO);
-	// glGenBuffers(1, &VBO);
-	// glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), some_data, GL_STATIC_DRAW);
-	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	// glEnableVertexAttribArray(0);
-	// //glActiveTexture(GL_TEXTURE0);
-	
-	
-	
-	// // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	// // tex_uniform_location = glGetUniformLocation(shaderProgram, "u_texture");
-	// // glUniform1fv(tex_uniform_location, 4096 / sizeof(float), textures_data);
-
-	// tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd");
-	// glUniform2f(tex_uniform_location, rndX,  rndY);
-	// // }
-	// glBindBuffer(GL_ARRAY_BUFFER, 0);
-	// glBindVertexArray(0);
-	// glUseProgram(shaderProgram);
-	// glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-	// glDrawArrays(GL_TRIANGLES, 0, 3);
-    //  std::cout <<readval[0][0] <<" Hello world\n";
-	// // glReadBuffer(GL_COLOR_ATTACHMENT0);
 	unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
 	memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
 	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
-	// glReadBuffer(GL_BACK);
 	printf("READVALS: \n");
-	// glfwSwapBuffers(display);
 	for(int  i = 0; i < 32; ++i){
 		for( int j = 0; j < 32; ++j){
-			printf("0x%6x\n", frame[i * 32 + j]);
+			printf("%2d ", frame[i * 32 + j]);
+				
 		}
-		printf("=======================\n");
+		printf("\n");
 	}
-    // printf("0x%x\n", readval);
-	
 	return 0;
 
 }
