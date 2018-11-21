@@ -1,0 +1,1 @@
+prun -np 1 -native '-C [glitch|drammer]' bash ./startup
