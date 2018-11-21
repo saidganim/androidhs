@@ -23,6 +23,7 @@ struct pagemap_entry{
 
 
 struct kgsl_entry {
+	struct kgsl_entry* kgsl_next;
 	void* kgsl_gpu_va;	// the same as virtual address for embedded device
 	void* kgsl_va;		// no comments...
 	void* kgsl_pa;		// will be filled by us during one-way lookup
@@ -169,7 +170,7 @@ int main(){
 	
 	int pagemap_f = open("/proc/self/pagemap", O_RDONLY);
 	char kgsl_path[100]; // no buffer overwlof here, please:)
-	struct kgsl_entry kgsl_arr[50];
+	struct kgsl_entry *kgsl_arr = NULL;
 	struct kgsl_entry kgsl_cur;
 	pid_t self = getpid();
 	sprintf(kgsl_path, "/d/kgsl/proc/%d/mem", self);
@@ -236,11 +237,11 @@ int main(){
 	}
 	uint32_t ttmp = 0;
 	// TEXTURE
-	for(int i = 0; i < 100; ++i){
+	for(int i = 0; i < 10; ++i){
 		glGenTextures(1, &tex2[i]);
 		glBindTexture(GL_TEXTURE_2D, tex2[i]);
 		ttmp = ttmp + rndX + rndY;
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -285,15 +286,38 @@ int main(){
 			continue;
 		// we have texture
 		kgsl_cur.kgsl_pa = (void*)read_entry(pagemap_f, (void*)kgsl_cur.kgsl_va);
-		kgsl_arr[cur_i++] = kgsl_cur;
+		
 		printf("%p %p     %lu    %3lu ", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
-		printf("%s      ", kgsl_cur.kgsl_flags);
-		printf("%s            ", kgsl_cur.kgsl_type);
-		printf("%s ", kgsl_cur.kgsl_usage);
-		printf("%lu -- [physaddr:%p; virtualaddr:%p]\n", kgsl_cur.kgsl_sglen, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_va);
-		fflush(stdout);
-	}
+                printf("%s      ", kgsl_cur.kgsl_flags);
+                printf("%s            ", kgsl_cur.kgsl_type);
+                printf("%s ", kgsl_cur.kgsl_usage);
+                printf("%lu -- [physaddr:%p; virtualaddr:%p]\n", kgsl_cur.kgsl_sglen, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_va);
+                fflush(stdout);
 	
+		struct kgsl_entry** kgsl_ptr = &kgsl_arr;		
+		while(*kgsl_ptr){
+			if((*kgsl_ptr) && (*kgsl_ptr)->kgsl_pa > kgsl_cur.kgsl_pa)
+				break;
+			kgsl_ptr = &(*kgsl_ptr)->kgsl_next;
+		}
+		kgsl_cur.kgsl_next = (*kgsl_ptr);
+		*kgsl_ptr = (struct kgsl_entry*)malloc(sizeof(struct kgsl_entry));
+		**kgsl_ptr = kgsl_cur;
+	}
+
+	printf("\n=================================================SORTED LIST OF ENTRIES========================================\n\n");
+	
+	while(kgsl_arr){
+		kgsl_cur = *kgsl_arr;
+		printf("%p %p     %8lu    %3lu ", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
+                printf("%s      ", kgsl_cur.kgsl_flags);
+                printf("%s            ", kgsl_cur.kgsl_type);
+                printf("%s ", kgsl_cur.kgsl_usage);
+                printf("%4lu -- [physaddr:%p; virtualaddr:%p]\n", kgsl_cur.kgsl_sglen, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_va);
+                fflush(stdout);
+
+		kgsl_arr = kgsl_arr->kgsl_next;
+	}
 	
 
 
