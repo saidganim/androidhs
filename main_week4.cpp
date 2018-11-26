@@ -55,15 +55,6 @@ uint64_t read_entry(int fd, void* va){
 	return (uint64_t)( pfn * sysconf(_SC_PAGE_SIZE)) + ((uint64_t)va % sysconf(_SC_PAGE_SIZE));
 }
 
-//const char *vertexShaderSource = "#version 300 es\n"
-//    "layout (location = 0) in vec3 aPos;\n"
-//	"uniform vec2 a_rnd;\n"
-//    "void main()\n"
-//    "{\n"
-//    "   gl_Position = vec4(a_rnd.x, a_rnd.y, 0.f, 1.0);\n"
-//    "}\0";
-
-
 const char *vertexShaderSource = "#version 300 es\n"
     "layout (location = 0) in vec3 aPos;\n"
 	"uniform vec2 a_rnd;\n"
@@ -195,7 +186,7 @@ int main(){
 
 	memset(textures_data, 0x41, 4096);
 	memset(readval, 0xaa, 32 * 32 * sizeof(unsigned int));
-	GLuint VBO, tex, tex2;
+	GLuint VBO, tex, tex2[150000];
 	// while(1){
 	
 	std::cout<<"Generated value sum==" << rndX + rndY << " ; rndX==" << rndX << "; rndY==" << rndY << "\n";
@@ -250,17 +241,18 @@ int main(){
 	}
 	uint32_t ttmp = 0;
 	// TEXTURE
-	glGenTextures(1, &tex2);
-	glBindTexture(GL_TEXTURE_2D, tex2);
-	ttmp = ttmp + rndX + rndY;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	for(int i = 0; i < 50000; ++i){
+		glGenTextures(1, &tex2[i]);
+		glBindTexture(GL_TEXTURE_2D, tex2[i]);
+		ttmp = ttmp + rndX + rndY;
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
 	// DRAWING
-	
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     	glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(shaderProgram);
@@ -268,7 +260,7 @@ int main(){
 	glUniform2f(tex_uniform_location, rndX / 32.f,  rndY / 32.f);
 	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd2");
 	glUniform2f(tex_uniform_location, rndX,  rndY);
-	glBindTexture(GL_TEXTURE_2D, tex2);
+	glBindTexture(GL_TEXTURE_2D, tex2[0]);
 	glDrawArrays(GL_POINTS, 0, 1);
 
 	unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
