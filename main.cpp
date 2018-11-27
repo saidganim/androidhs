@@ -87,18 +87,18 @@ uint64_t read_entry(int fd, void* va){
 //    "}\0";
 
 
-const char *vertexShaderSource = "#version 300 es\n"
+const char *fragmentShaderSource = "#version 300 es\n"
     // "layout (location = 0) in vec3 aPos;\n"
 	// "uniform vec2 a_rnd;\n"
     // "void main()\n"
     // "{\n"
     // "   gl_Position = vec4(a_rnd.x, a_rnd.y, 0.f, 1.0);\n"
     // "}\0";
-	"#define MAX 1000 // max offset\n"
+	"#define MAX 5000 // max offset\n"
 	"#define STRIDE 4 // access stride\n"
 	"uniform sampler2D tex;\n"
+	"out vec4 val;\n"
 	"void main() {\n"
-	"vec4 val;\n"
 	"vec2 texCoord;\n"
 	"// external loop not required for (a)\n"
 	"for (int i=0; i<2; i++) {\n"
@@ -107,16 +107,16 @@ const char *vertexShaderSource = "#version 300 es\n"
 	"val += texelFetch(tex, ivec2(texCoord),0);\n"
 	"}\n"
 	"}\n"
-	"gl_Position = val;\n"
+	// "gl_Position = val;\n"
 	"}\n\0";
 
-const char *fragmentShaderSource = "#version 300 es\n"
-    "out vec4 FragColor;\n"
-	"uniform sampler2D u_texture;\n"
-	"uniform vec2 a_rnd2;\n"
+const char *vertexShaderSource = "#version 300 es\n"
+    "\n"
+	// "uniform sampler2D u_texture;\n"
+	// "uniform vec2 a_rnd2;\n"
     "void main()\n"
     "{\n"
-    "FragColor =  texelFetch(u_texture, ivec2(a_rnd2), 0);\n"
+    "gl_Position =  vec4(0.f, 0.f, 0.f, 1.f);\n"
     "}\n\0";
 
 
@@ -265,7 +265,7 @@ inline uint32_t Reverse32(uint32_t value){
 
     void drawFrameWithCounters(void){
        
-        unsigned int* textures_data = (unsigned int*) malloc(4096);
+        unsigned int* textures_data = (unsigned int*) malloc(2048 * 2048 * 4);
 	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	GLuint shaderProgram = glCreateProgram();
@@ -323,7 +323,7 @@ inline uint32_t Reverse32(uint32_t value){
 	glBindFramebuffer(GL_FRAMEBUFFER, FBF);
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, readval);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0); 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -337,7 +337,7 @@ inline uint32_t Reverse32(uint32_t value){
 	glGenTextures(1, &tex2);
 	glBindTexture(GL_TEXTURE_2D, tex2);
 	uint32_t ttmp = rndX + rndY;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -369,7 +369,7 @@ inline uint32_t Reverse32(uint32_t value){
     // getCounterByName("TP", "TPL1_TPPERF_TP2_L1_MISSES", &groupID[0], &counterID[2]);
     // getCounterByName("TP", "TPL1_TPPERF_TP3_L1_MISSES", &groupID[0], &counterID[3]);
     // getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[0], &counter[1]);
-        getCounterByName("UCHE", "UCHE_UCHEPERF_READ_REQUESTS_TP", &group[0],&counter[0]);
+        getCounterByName("UCHE", "UCHE_UCHEPERF_VBIF_READ_BEATS_TP", &group[0],&counter[0]);
         // getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[0],&counter[0]);
         // getCounterByName("API", "Draw Calls", &group[1], &counter[1]);
         // create perf monitor ID
@@ -384,7 +384,8 @@ inline uint32_t Reverse32(uint32_t value){
         glEndPerfMonitorAMD(monitor);
         // read the counters
         GLint resultSize;
-        glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
+        usleep(1000);
+		glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
 		if(!resultSize){
 			printf("RESULTSIZE == 0...\n");
 			return;
@@ -404,7 +405,7 @@ inline uint32_t Reverse32(uint32_t value){
             glGetPerfMonitorCounterInfoAMD(groupId, counterId, GL_COUNTER_TYPE_AMD, &counterType);
             if ( counterType == GL_UNSIGNED_INT64_AMD ){
                 GLuint64 counterResult = *(GLuint64*)(&counterData[wordCount + 2]);
-				unsigned int tmp_counterResult = counterResult;
+				uint32_t tmp_counterResult = counterResult;
                 // Print counter result
 				printf("COUNTER TYPE INT64 %u\n", tmp_counterResult);
                 // Print counter result
@@ -421,9 +422,6 @@ inline uint32_t Reverse32(uint32_t value){
             //   (GL_UNSIGNED_INT and GL_PERCENTAGE_AMD)
         }
 		printf("RESULT %lu\n", *counterData);
-		unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
-	memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
-	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
 	// printf("READVALS: \n");
 	// for(int  i = 0; i < 32; ++i){
 	// 	for( int j = 0; j < 32; ++j){
