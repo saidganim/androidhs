@@ -88,12 +88,27 @@ uint64_t read_entry(int fd, void* va){
 
 
 const char *vertexShaderSource = "#version 300 es\n"
-    "layout (location = 0) in vec3 aPos;\n"
-	"uniform vec2 a_rnd;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(a_rnd.x, a_rnd.y, 0.f, 1.0);\n"
-    "}\0";
+    // "layout (location = 0) in vec3 aPos;\n"
+	// "uniform vec2 a_rnd;\n"
+    // "void main()\n"
+    // "{\n"
+    // "   gl_Position = vec4(a_rnd.x, a_rnd.y, 0.f, 1.0);\n"
+    // "}\0";
+	"#define MAX max // max offset\n"
+	"#define STRIDE stride // access stride\n"
+	"uniform sampler2D tex;\n"
+	"void main() {\n"
+	"vec4 val;\n"
+	"vec2 texCoord;\n"
+	"// external loop not required for (a)\n"
+	"for (int i=0; i<2; i++) {\n"
+	"for (int x=0; x < MAX; x += STRIDE) {\n"
+	"texCoord = offToPixel(x);\n"
+	"val += texture2D(tex, texCoord);\n"
+	"}\n"
+	"}\n"
+	"gl_Position = val;\n"
+	"}\n\0";
 
 const char *fragmentShaderSource = "#version 300 es\n"
     "out vec4 FragColor;\n"
