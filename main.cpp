@@ -94,8 +94,8 @@ const char *vertexShaderSource = "#version 300 es\n"
     // "{\n"
     // "   gl_Position = vec4(a_rnd.x, a_rnd.y, 0.f, 1.0);\n"
     // "}\0";
-	"#define MAX 100 // max offset\n"
-	"#define STRIDE 1 // access stride\n"
+	"#define MAX 1000 // max offset\n"
+	"#define STRIDE 4 // access stride\n"
 	"uniform sampler2D tex;\n"
 	"void main() {\n"
 	"vec4 val;\n"
@@ -190,6 +190,13 @@ void egl_setup() {
 
 }
 
+
+inline uint32_t Reverse32(uint32_t value){
+    return (((value & 0x000000FF) << 24) |
+            ((value & 0x0000FF00) <<  8) |
+            ((value & 0x00FF0000) >>  8) |
+            ((value & 0xFF000000) >> 24));
+}
 
 
     typedef struct 
@@ -357,13 +364,18 @@ void egl_setup() {
         // each implementation of this extension on different hardware
         // could define different names and groups.  This is just provided
         // to demonstrate the API.
-		
-        getCounterByName("SP", "SP_ICL1_MISSES", &group[0],&counter[0]);
+		// getCounterByName("TP", "TPL1_TPPERF_TP0_L1_MISSES", &group[0], &counter[0]);
+    // getCounterByName("TP", "TPL1_TPPERF_TP1_L1_MISSES", &groupID[0], &counterID[1]);
+    // getCounterByName("TP", "TPL1_TPPERF_TP2_L1_MISSES", &groupID[0], &counterID[2]);
+    // getCounterByName("TP", "TPL1_TPPERF_TP3_L1_MISSES", &groupID[0], &counterID[3]);
+    // getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[0], &counter[1]);
+        getCounterByName("UCHE", "UCHE_UCHEPERF_READ_REQUESTS_TP", &group[0],&counter[0]);
+        // getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[0],&counter[0]);
         // getCounterByName("API", "Draw Calls", &group[1], &counter[1]);
         // create perf monitor ID
         glGenPerfMonitorsAMD(1, &monitor);
         // enable the counters
-        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1,&counter[0]);
+        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1 ,&counter[0]);
         // glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1, &counter[1]);
         glBeginPerfMonitorAMD(monitor);
 
@@ -373,6 +385,10 @@ void egl_setup() {
         // read the counters
         GLint resultSize;
         glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
+		if(!resultSize){
+			printf("RESULTSIZE == 0...\n");
+			return;
+		}
         counterData = (GLuint*) malloc(resultSize);
         GLsizei bytesWritten;
         glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_AMD,  resultSize, counterData, &bytesWritten);
@@ -387,17 +403,20 @@ void egl_setup() {
             GLuint counterType;
             glGetPerfMonitorCounterInfoAMD(groupId, counterId, GL_COUNTER_TYPE_AMD, &counterType);
             if ( counterType == GL_UNSIGNED_INT64_AMD ){
-                uint64_t counterResult = *(uint64_t*)(&counterData[wordCount + 2]);
+                GLuint64 counterResult = *(GLuint64*)(&counterData[wordCount + 2]);
+				unsigned int tmp_counterResult = counterResult;
                 // Print counter result
-				printf("COUNTER TYPE INT64 %lu\n", counterResult);
+				printf("COUNTER TYPE INT64 %u\n", tmp_counterResult);
+                // Print counter result
                 wordCount += 4;
-            }
-            else if ( counterType == GL_FLOAT ){
-                float counterResult = *(float*)(&counterData[wordCount + 2]);
-				printf("COUNTER TYPE FLOAT %f\n", counterResult);
+            } else if(counterType == GL_UNSIGNED_INT){
+				GLuint counterResult = *(GLuint*)(&counterData[wordCount + 2]);
+				size_t tmp_counterResult = counterResult;
+                // Print counter result
+				printf("COUNTER TYPE INT %d\n", tmp_counterResult);
                 // Print counter result
                 wordCount += 3;
-            }
+			}
             // else if ( ... ) check for other counter types 
             //   (GL_UNSIGNED_INT and GL_PERCENTAGE_AMD)
         }
@@ -405,14 +424,14 @@ void egl_setup() {
 		unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
 	memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
 	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
-	printf("READVALS: \n");
-	for(int  i = 0; i < 32; ++i){
-		for( int j = 0; j < 32; ++j){
-			printf("%2d ", frame[i * 32 + j]);
+	// printf("READVALS: \n");
+	// for(int  i = 0; i < 32; ++i){
+	// 	for( int j = 0; j < 32; ++j){
+	// 		printf("%2d ", frame[i * 32 + j]);
 				
-		}
-		printf("\n");
-	}
+	// 	}
+	// 	printf("\n");
+	// }
     }
 
 
