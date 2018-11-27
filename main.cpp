@@ -287,6 +287,7 @@ void egl_setup() {
             // else if ( ... ) check for other counter types 
             //   (GL_UNSIGNED_INT and GL_PERCENTAGE_AMD)
         }
+		printf("RESULT %lu\n", wordCount);
     }
 
 
