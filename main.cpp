@@ -246,8 +246,10 @@ void egl_setup() {
         for ( int j = 0; j < counters[i].numCounters; j++ ){
             char curCounterName[256];
             glGetPerfMonitorCounterStringAMD(groups[i], counters[i].counterList[j], 256, NULL, curCounterName);
+			printf("COUNTER CMP %s\n", curCounterName);
             if (strcmp(counterName, curCounterName) == 0){
                 *counterID = counters[i].counterList[j];
+				printf("SUCCESS COUNTER\n");
                 return 0;
             }
         }
@@ -266,7 +268,7 @@ void egl_setup() {
         // could define different names and groups.  This is just provided
         // to demonstrate the API.
 		
-        getCounterByName("a3xx_sp_perfcounter_select", "SP_ICL1_MISSES", &group[0],&counter[0]);
+        getCounterByName("GROUP CMP SP", "SP_ICL1_MISSES", &group[0],&counter[0]);
         // getCounterByName("API", "Draw Calls", &group[1], &counter[1]);
         // create perf monitor ID
         glGenPerfMonitorsAMD(1, &monitor);
