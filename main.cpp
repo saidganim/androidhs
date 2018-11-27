@@ -256,8 +256,95 @@ void egl_setup() {
         glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1,&counter[0]);
         glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1, &counter[1]);
         glBeginPerfMonitorAMD(monitor);
-        // RENDER FRAME HERE
-        // ...
+        unsigned int* textures_data = (unsigned int*) malloc(4096);
+	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	GLuint shaderProgram = glCreateProgram();
+	GLuint VAO;
+	GLuint FBF;
+	GLint tex_uniform_location;
+	unsigned int readval[32][32];
+	int success;
+    char infoLog[512];
+	uint32_t rndX = rand() & 0b11111, rndY = rand() & 0b11111;
+
+	memset(textures_data, 0x41, 4096);
+	memset(readval, 0xaa, 32 * 32 * sizeof(unsigned int));
+	GLuint VBO, tex, tex2;
+	// while(1){
+	
+	std::cout<<"Generated value sum==" << rndX + rndY << " ; rndX==" << rndX << "; rndY==" << rndY << "\n";
+
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glCompileShader(vertexShader);
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+
+ 	if (success != GL_TRUE)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	glCompileShader(fragmentShader);   	
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (success != GL_TRUE)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+		exit(1);
+    }
+
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+
+ 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+		exit(1);
+	}
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	
+	// FRAMEBUFFER
+	glGenFramebuffers(1, &FBF);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBF);
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, readval);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!\n";
+	}
+
+	// TEXTURE
+	glGenTextures(1, &tex2);
+	glBindTexture(GL_TEXTURE_2D, tex2);
+	uint32_t ttmp = rndX + rndY;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// DRAWING
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+	glUseProgram(shaderProgram);
+	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd");
+	glUniform2f(tex_uniform_location, rndX / 32.f,  rndY / 32.f);
+	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd2");
+	glUniform2f(tex_uniform_location, rndX,  rndY);
+	glBindTexture(GL_TEXTURE_2D, tex2);
+	glDrawArrays(GL_POINTS, 0, 1);
         glEndPerfMonitorAMD(monitor);
         // read the counters
         GLint resultSize;
