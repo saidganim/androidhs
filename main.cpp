@@ -268,7 +268,7 @@ void egl_setup() {
         // could define different names and groups.  This is just provided
         // to demonstrate the API.
 		
-        getCounterByName("GROUP CMP SP", "SP_ICL1_MISSES", &group[0],&counter[0]);
+        getCounterByName("SP", "SP_ICL1_MISSES", &group[0],&counter[0]);
         // getCounterByName("API", "Draw Calls", &group[1], &counter[1]);
         // create perf monitor ID
         glGenPerfMonitorsAMD(1, &monitor);
@@ -370,6 +370,7 @@ void egl_setup() {
         GLint resultSize;
         glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
         counterData = (GLuint*) malloc(resultSize);
+		printf("COUNTER DATA HAS SIZE OF %lu\n", resultSize);
         GLsizei bytesWritten;
         glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_AMD,  resultSize, counterData, &bytesWritten);
         // display or log counter info
@@ -394,7 +395,7 @@ void egl_setup() {
             // else if ( ... ) check for other counter types 
             //   (GL_UNSIGNED_INT and GL_PERCENTAGE_AMD)
         }
-		printf("RESULT %lu\n", wordCount);
+		printf("RESULT %lu\n", *counterData);
 		unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
 	memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
 	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
