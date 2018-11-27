@@ -372,7 +372,7 @@ void egl_setup() {
         counterData = (GLuint*) malloc(resultSize);
         GLsizei bytesWritten;
         glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_AMD,  resultSize, counterData, &bytesWritten);
-		printf("COUNTER DATA HAS SIZE OF %lu / %lu\n", *bytesWritten, resultSize);
+		printf("COUNTER DATA HAS SIZE OF %lu / %lu\n", bytesWritten, resultSize);
         // display or log counter info
         GLsizei wordCount = 0;
 
@@ -385,17 +385,19 @@ void egl_setup() {
             if ( counterType == GL_UNSIGNED_INT64_AMD ){
                 uint64_t counterResult = *(uint64_t*)(&counterData[wordCount + 2]);
                 // Print counter result
+				printf("COUNTER TYPE INT64 %lu\n", counterResult);
                 wordCount += 4;
             }
             else if ( counterType == GL_FLOAT ){
                 float counterResult = *(float*)(&counterData[wordCount + 2]);
+				printf("COUNTER TYPE FLOAT %f\n", counterResult);
                 // Print counter result
                 wordCount += 3;
             }
             // else if ( ... ) check for other counter types 
             //   (GL_UNSIGNED_INT and GL_PERCENTAGE_AMD)
         }
-		printf("RESULT %lu\n", *counterData);
+		// printf("RESULT %lu\n", *counterData);
 		unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
 	memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
 	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
