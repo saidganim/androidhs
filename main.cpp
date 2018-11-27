@@ -257,26 +257,7 @@ void egl_setup() {
     }
 
     void drawFrameWithCounters(void){
-        GLuint group[2];
-        GLuint counter[2];
-        GLuint monitor;
-        GLuint *counterData;
-
-        // Get group/counter IDs by name.  Note that normally the
-        // counter and group names need to be queried for because
-        // each implementation of this extension on different hardware
-        // could define different names and groups.  This is just provided
-        // to demonstrate the API.
-		
-        getCounterByName("SP", "SP_ICL1_MISSES", &group[0],&counter[0]);
-        // getCounterByName("API", "Draw Calls", &group[1], &counter[1]);
-        // create perf monitor ID
-        glGenPerfMonitorsAMD(1, &monitor);
-        // enable the counters
-        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1,&counter[0]);
-        // glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1, &counter[1]);
-        glBeginPerfMonitorAMD(monitor);
-        unsigned int* textures_data = (unsigned int*) malloc(4096);
+       
 	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	GLuint shaderProgram = glCreateProgram();
@@ -364,6 +345,29 @@ void egl_setup() {
 	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd2");
 	glUniform2f(tex_uniform_location, rndX,  rndY);
 	glBindTexture(GL_TEXTURE_2D, tex2);
+
+
+
+	 GLuint group[2];
+        GLuint counter[2];
+        GLuint monitor;
+        GLuint *counterData;
+
+        // Get group/counter IDs by name.  Note that normally the
+        // counter and group names need to be queried for because
+        // each implementation of this extension on different hardware
+        // could define different names and groups.  This is just provided
+        // to demonstrate the API.
+		
+        getCounterByName("SP", "SP_ICL1_MISSES", &group[0],&counter[0]);
+        // getCounterByName("API", "Draw Calls", &group[1], &counter[1]);
+        // create perf monitor ID
+        glGenPerfMonitorsAMD(1, &monitor);
+        // enable the counters
+        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1,&counter[0]);
+        // glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1, &counter[1]);
+        glBeginPerfMonitorAMD(monitor);
+        unsigned int* textures_data = (unsigned int*) malloc(4096);
 	glDrawArrays(GL_POINTS, 0, 1);
         glEndPerfMonitorAMD(monitor);
         // read the counters
