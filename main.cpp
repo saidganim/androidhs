@@ -248,13 +248,13 @@ void egl_setup() {
         // each implementation of this extension on different hardware
         // could define different names and groups.  This is just provided
         // to demonstrate the API.
-        getCounterByName("HW", "Hardware Busy", &group[0],&counter[0]);
+        getCounterByName("a3xx_sp_perfcounter_select", "SP_ICL1_MISSES", &group[0],&counter[0]);
         getCounterByName("API", "Draw Calls", &group[1], &counter[1]);
         // create perf monitor ID
         glGenPerfMonitorsAMD(1, &monitor);
         // enable the counters
         glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1,&counter[0]);
-        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1, &counter[1]);
+        // glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1, &counter[1]);
         glBeginPerfMonitorAMD(monitor);
         unsigned int* textures_data = (unsigned int*) malloc(4096);
 	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
