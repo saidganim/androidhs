@@ -370,9 +370,9 @@ void egl_setup() {
         GLint resultSize;
         glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
         counterData = (GLuint*) malloc(resultSize);
-		printf("COUNTER DATA HAS SIZE OF %lu\n", resultSize);
         GLsizei bytesWritten;
         glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_AMD,  resultSize, counterData, &bytesWritten);
+		printf("COUNTER DATA HAS SIZE OF %lu / %lu\n", *bytesWritten, resultSize);
         // display or log counter info
         GLsizei wordCount = 0;
 
