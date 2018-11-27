@@ -375,6 +375,17 @@ void egl_setup() {
             //   (GL_UNSIGNED_INT and GL_PERCENTAGE_AMD)
         }
 		printf("RESULT %lu\n", wordCount);
+		unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
+	memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
+	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
+	printf("READVALS: \n");
+	for(int  i = 0; i < 32; ++i){
+		for( int j = 0; j < 32; ++j){
+			printf("%2d ", frame[i * 32 + j]);
+				
+		}
+		printf("\n");
+	}
     }
 
 
