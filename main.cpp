@@ -258,6 +258,7 @@ void egl_setup() {
 
     void drawFrameWithCounters(void){
        
+        unsigned int* textures_data = (unsigned int*) malloc(4096);
 	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	GLuint shaderProgram = glCreateProgram();
@@ -346,8 +347,6 @@ void egl_setup() {
 	glUniform2f(tex_uniform_location, rndX,  rndY);
 	glBindTexture(GL_TEXTURE_2D, tex2);
 
-
-
 	 GLuint group[2];
         GLuint counter[2];
         GLuint monitor;
@@ -367,7 +366,8 @@ void egl_setup() {
         glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1,&counter[0]);
         // glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1, &counter[1]);
         glBeginPerfMonitorAMD(monitor);
-        unsigned int* textures_data = (unsigned int*) malloc(4096);
+
+
 	glDrawArrays(GL_POINTS, 0, 1);
         glEndPerfMonitorAMD(monitor);
         // read the counters
@@ -401,7 +401,7 @@ void egl_setup() {
             // else if ( ... ) check for other counter types 
             //   (GL_UNSIGNED_INT and GL_PERCENTAGE_AMD)
         }
-		// printf("RESULT %lu\n", *counterData);
+		printf("RESULT %lu\n", *counterData);
 		unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
 	memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
 	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
