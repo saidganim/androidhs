@@ -55,7 +55,7 @@ const char *fragmentShaderSource =
 	"       for (int x=0; x < MAX; x += 4) {\n"
 
 	"        texCoord.x = x % 2048;\n"
-    "        texCoord.y = 1 + x / 2048;\n"
+    "        texCoord.y = x;\n"
     
     // "           texCoord.x = (x % 1024);\n"
 	// "           texCoord.y = (x / 1024);\n"
@@ -235,7 +235,7 @@ void drawFrameWithCounters(void){
 	glGenTextures(1, &tex2);
 	glBindTexture(GL_TEXTURE_2D, tex2);
 	uint32_t ttmp = rndX + rndY;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
