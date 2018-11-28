@@ -156,10 +156,10 @@ void egl_setup() {
         for ( i = 0; i < numGroups; i++ ){
            char curGroupName[256];
            glGetPerfMonitorGroupStringAMD(groups[i], 256, NULL, curGroupName);
-		   printf("GROUP CMP %s\n", curGroupName);
+		//    printf("GROUP CMP %s\n", curGroupName);
            if (strcmp(groupName, curGroupName) == 0){
                *groupID = groups[i];
-				printf("SUCCESS GROUP\n");
+				// printf("SUCCESS GROUP\n");
                break;
            }
         }
@@ -170,10 +170,10 @@ void egl_setup() {
         for ( int j = 0; j < counters[i].numCounters; j++ ){
             char curCounterName[256];
             glGetPerfMonitorCounterStringAMD(groups[i], counters[i].counterList[j], 256, NULL, curCounterName);
-			printf("COUNTER CMP %s\n", curCounterName);
+			// printf("COUNTER CMP %s\n", curCounterName);
             if (strcmp(counterName, curCounterName) == 0){
                 *counterID = counters[i].counterList[j];
-				printf("SUCCESS COUNTER\n");
+				// printf("SUCCESS COUNTER\n");
                 return 0;
             }
         }
@@ -258,7 +258,7 @@ void drawFrameWithCounters(void){
     getCounterByName("TP", "TPL1_TPPERF_TP0_L1_MISSES", &group[0],&counter[0]);
     getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
     glGenPerfMonitorsAMD(1, &monitor);
-    for(size_t maxval = 4; maxval < 500; maxval += 4){
+    for(size_t maxval = 100; maxval < 500; maxval += 4){
         printf("%lu,", maxval);
         tex_uniform_location = glGetUniformLocation(shaderProgram, "MAX");
 	    glUniform1i(tex_uniform_location, maxval);
