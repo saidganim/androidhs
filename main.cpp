@@ -55,7 +55,7 @@ const char *fragmentShaderSource =
 	"       for (int x=0; x < MAX; x += 4) {\n"
 
 	"        texCoord.x = x % 2048;\n"
-    "        texCoord.y = x;\n"
+    "        texCoord.y =  x;\n"
     
     // "           texCoord.x = (x % 1024);\n"
 	// "           texCoord.y = (x / 1024);\n"
@@ -314,7 +314,7 @@ void drawFrameWithCounters(void){
     // getCounterByName("UCHE", "UCHE_UCHEPERF_VBIF_READ_BEATS_TP", &group[0],&counter[0]);
     getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
     glGenPerfMonitorsAMD(1, &monitor);
-    for(size_t maxval = 100; maxval < 32768 / 4; maxval += 100){
+    for(size_t maxval = 64; maxval < 32768 / 4; maxval *= 2){
         printf("%lu,", maxval * 4);
         tex_uniform_location = glGetUniformLocation(shaderProgram, "MAX");
 	    glUniform1i(tex_uniform_location, maxval);
@@ -349,7 +349,7 @@ void drawFrameWithCounters(void){
                 // uint64_t tmp_counterResult = counterResult;
                 // Print counter result
                 if(wordCount > 0)
-                    counterResult -= 36;
+                    counterResult -= 25;
                 printf(" %u,", counterResult);
                 // Print counter result
                 wordCount += 4;
