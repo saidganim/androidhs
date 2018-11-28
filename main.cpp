@@ -49,15 +49,16 @@ const char *fragmentShaderSource =
     "uniform int MAX; \n"
 	"out vec4 val;\n"
 	"void main() {\n"
-	"   vec2 texCoord;\n"
+	"   ivec2 texCoord;\n"
 	"   // external loop not required for (a)\n"
-"	    float xx = -1.; float yy = -1.;\n"
 	"   for (int i=0; i<2; i++) {\n"
-	"       for (int x=0; x < MAX; x += STRIDE) {\n"
-	"           texCoord.x = xx; \n"
-	"           texCoord.y = yy; \n"
-"		    xx += 1./float(MAX / STRIDE);\n"
-"		    if(xx >= 1.){yy += 1. / float(MAX/STRIDE); xx = -1.;}
+	"       for (int x=0; x < MAX; x += 4) {\n"
+
+	"        texCoord.x = x % 2048;\n"
+    "        texCoord.y = 1 + x / 2048;\n"
+    
+    // "           texCoord.x = (x % 1024);\n"
+	// "           texCoord.y = (x / 1024);\n"
 	"           val += texelFetch(tex, ivec2(texCoord),0);\n"
 	"       }\n"
 	"   }\n"
@@ -234,7 +235,7 @@ void drawFrameWithCounters(void){
 	glGenTextures(1, &tex2);
 	glBindTexture(GL_TEXTURE_2D, tex2);
 	uint32_t ttmp = rndX + rndY;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -310,10 +311,11 @@ void drawFrameWithCounters(void){
     // =========================================== UCHE RE =================================================
     printf("=========================================== UCHE RE =================================================\n");
     getCounterByName("VBIF", "AXI_READ_REQUESTS_TOTAL", &group[0],&counter[0]);
+    // getCounterByName("UCHE", "UCHE_UCHEPERF_VBIF_READ_BEATS_TP", &group[0],&counter[0]);
     getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
     glGenPerfMonitorsAMD(1, &monitor);
-    for(size_t maxval = 100; maxval < 5200; maxval += 100){
-        printf("%lu,", maxval);
+    for(size_t maxval = 64; maxval < 32768; maxval *= 2){
+        printf("%lu,", maxval * 4);
         tex_uniform_location = glGetUniformLocation(shaderProgram, "MAX");
 	    glUniform1i(tex_uniform_location, maxval);
         glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1 ,&counter[0]);   
@@ -347,7 +349,7 @@ void drawFrameWithCounters(void){
                 // uint64_t tmp_counterResult = counterResult;
                 // Print counter result
                 if(wordCount > 0)
-                    counterResult -= 25;
+                    counterResult -= 37;
                 printf(" %u,", counterResult);
                 // Print counter result
                 wordCount += 4;
