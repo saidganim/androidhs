@@ -51,9 +51,13 @@ const char *fragmentShaderSource =
 	"void main() {\n"
 	"   vec2 texCoord;\n"
 	"   // external loop not required for (a)\n"
+"	    float xx = -1.; float yy = -1.;\n"
 	"   for (int i=0; i<2; i++) {\n"
 	"       for (int x=0; x < MAX; x += STRIDE) {\n"
-	"           texCoord = vec2(x,x);\n"
+	"           texCoord.x = xx; \n"
+	"           texCoord.y = yy; \n"
+"		    xx += 1./float(MAX / STRIDE);\n"
+"		    if(xx >= 1.){yy += 1. / float(MAX/STRIDE); xx = -1.;}
 	"           val += texelFetch(tex, ivec2(texCoord),0);\n"
 	"       }\n"
 	"   }\n"
@@ -343,7 +347,7 @@ void drawFrameWithCounters(void){
                 // uint64_t tmp_counterResult = counterResult;
                 // Print counter result
                 if(wordCount > 0)
-                    counterResult -= 36;
+                    counterResult -= 25;
                 printf(" %u,", counterResult);
                 // Print counter result
                 wordCount += 4;
