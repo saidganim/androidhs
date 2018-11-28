@@ -9,7 +9,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <math.h>
-// #include <EGL/gl2ext.h>
 
 EGLDisplay display;
 EGLSurface pBuffer;
@@ -37,107 +36,47 @@ typedef void (*glGetPerfMonitorCounterInfoAMD_t)(uint, uint, size_t, void*);
  glGetPerfMonitorCounterDataAMD_t glGetPerfMonitorCounterDataAMD = (glGetPerfMonitorCounterDataAMD_t)eglGetProcAddress("glGetPerfMonitorCounterDataAMD");
  glGetPerfMonitorCounterInfoAMD_t glGetPerfMonitorCounterInfoAMD = (glGetPerfMonitorCounterInfoAMD_t)eglGetProcAddress("glGetPerfMonitorCounterInfoAMD");
 
-struct pagemap_entry{
-    uint64_t pfn : 54;
-    unsigned int soft_dirty : 1;
-    unsigned int file_page : 1;
-    unsigned int swapped : 1;
-    unsigned int present : 1;
-};
+typedef struct{
+    GLuint       *counterList;
+    int         numCounters;
+    int         maxActiveCounters;
+} CounterInfo;
 
-
-struct kgsl_entry {
-	struct kgsl_entry* kgsl_next;
-	void* kgsl_gpu_va;	// the same as virtual address for embedded device
-	void* kgsl_va;		// no comments...
-	void* kgsl_pa;		// will be filled by us during one-way lookup
-	size_t kgsl_size;	// no comments...
-	int kgsl_id;	// id of GL object
-	char kgsl_flags[50];	// permissions mode
-	char kgsl_type[50];	// in our case everything is gpumem
-	char kgsl_usage[50];	// no comments...
-	size_t kgsl_sglen;	// number of pages taken by entry
-};
-
-
-uint64_t read_entry(int fd, void* va){
-	uint64_t data;
-	struct pagemap_entry res;
-	uint64_t pfn;
-	if(sizeof(data) > pread(fd, &data, sizeof(data), (uint64_t)va / sysconf(_SC_PAGESIZE) * sizeof(uint64_t))){
-		printf("COULDN'T READ FROM PAGEMAP %p\n", va);
-		exit(1);
-	};
-	pfn = data & (((uint64_t)1 << 54) - 1);
-	
-	// res.pfn = data & (((uint64_t)1 << 54) - 1);
-    // res.soft_dirty = (data >> 54) & 1;
-    // res.file_page = (data >> 61) & 1;
-    // res.swapped = (data >> 62) & 1;
-    // res.present = (data >> 63) & 1;
-	return (uint64_t)( pfn * sysconf(_SC_PAGE_SIZE)) + ((uint64_t)va % sysconf(_SC_PAGE_SIZE));
-}
-
-//const char *vertexShaderSource = "#version 300 es\n"
-//    "layout (location = 0) in vec3 aPos;\n"
-//	"uniform vec2 a_rnd;\n"
-//    "void main()\n"
-//    "{\n"
-//    "   gl_Position = vec4(a_rnd.x, a_rnd.y, 0.f, 1.0);\n"
-//    "}\0";
-
-
-const char *fragmentShaderSource = "#version 300 es\n"
-    // "layout (location = 0) in vec3 aPos;\n"
-	// "uniform vec2 a_rnd;\n"
-    // "void main()\n"
-    // "{\n"
-    // "   gl_Position = vec4(a_rnd.x, a_rnd.y, 0.f, 1.0);\n"
-    // "}\0";
-	"#define MAX 5000 // max offset\n"
+const char *fragmentShaderSource = 
+    "#version 300 es\n"
 	"#define STRIDE 4 // access stride\n"
 	"uniform sampler2D tex;\n"
+    "uniform int MAX; \n"
 	"out vec4 val;\n"
 	"void main() {\n"
-	"vec2 texCoord;\n"
-	"// external loop not required for (a)\n"
-	"for (int i=0; i<2; i++) {\n"
-	"for (int x=0; x < MAX; x += STRIDE) {\n"
-	"texCoord = vec2(x,x);\n"
-	"val += texelFetch(tex, ivec2(texCoord),0);\n"
-	"}\n"
-	"}\n"
-	// "gl_Position = val;\n"
+	"   vec2 texCoord;\n"
+	"   // external loop not required for (a)\n"
+	"   for (int i=0; i<2; i++) {\n"
+	"       for (int x=0; x < MAX; x += STRIDE) {\n"
+	"           texCoord = vec2(x,x);\n"
+	"           val += texelFetch(tex, ivec2(texCoord),0);\n"
+	"       }\n"
+	"   }\n"
 	"}\n\0";
 
 const char *vertexShaderSource = "#version 300 es\n"
-    "\n"
-	// "uniform sampler2D u_texture;\n"
-	// "uniform vec2 a_rnd2;\n"
-    "void main()\n"
-    "{\n"
-    "gl_Position =  vec4(0.f, 0.f, 0.f, 1.f);\n"
+    "void main(){\n"
+    "   gl_Position =  vec4(0.f, 0.f, 0.f, 1.f);\n"
     "}\n\0";
-
 
 void egl_setup() {
     int maj, min;
     display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-
     if (display == EGL_NO_DISPLAY) {
         printf("EGL_NO_DISPLAY");
         exit(-1);
     }
-
     if (!eglInitialize(display, &maj, &min)) {
         printf("eglinfo: eglInitialize failed\n");
         exit(-1);
     }
-
     printf("EGL v%i.%i initialized\n", maj, min);
-
-    EGLint attribs[] =
-    {
+    EGLint attribs[] = {
         EGL_NONE, 
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT_KHR,
         EGL_RED_SIZE, 8,
@@ -147,67 +86,40 @@ void egl_setup() {
         
     };
     
-    EGLint pBuffer_attribs[] =
-    {
+    EGLint pBuffer_attribs[] = {
         EGL_WIDTH, 32,
         EGL_HEIGHT, 32,
         EGL_TEXTURE_TARGET, EGL_NO_TEXTURE,
         EGL_TEXTURE_FORMAT, EGL_NO_TEXTURE,
         EGL_NONE
     };
-
-    EGLint ctx_attribs[] =
-    {
+    EGLint ctx_attribs[] = {
         EGL_CONTEXT_CLIENT_VERSION, 3,
         EGL_NONE
     };
-
     EGLint num_configs;
     EGLConfig config;
-
-    if (!eglChooseConfig(display, attribs, &config, 1, &num_configs) || (num_configs < 1))
-    {
+    if (!eglChooseConfig(display, attribs, &config, 1, &num_configs) || (num_configs < 1)){
         printf("Could not find config for %s (perhaps this API is unsupported?)\n", "GLES3");
     }
     EGLint vid;
-    if (!eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &vid))
-    {
+    if (!eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &vid)){
         printf("Could not get native visual ID from chosen config\n");
     }
     eglBindAPI(EGL_OPENGL_ES_API);
-
     pBuffer = eglCreatePbufferSurface(display, config, pBuffer_attribs);
     ctx = eglCreateContext(display, config, EGL_NO_CONTEXT, ctx_attribs);
     if (ctx == EGL_NO_CONTEXT) {
         printf("Context not created!\n");
     }
 
-    if(!eglMakeCurrent(display, pBuffer, pBuffer, ctx))
-    { 
+    if(!eglMakeCurrent(display, pBuffer, pBuffer, ctx)){ 
         printf("eglMakeCurrent() failed\n");
 
     }
-
 }
 
-
-inline uint32_t Reverse32(uint32_t value){
-    return (((value & 0x000000FF) << 24) |
-            ((value & 0x0000FF00) <<  8) |
-            ((value & 0x00FF0000) >>  8) |
-            ((value & 0xFF000000) >> 24));
-}
-
-
-    typedef struct 
-    {
-            GLuint       *counterList;
-            int         numCounters;
-            int         maxActiveCounters;
-    } CounterInfo;
-
-    void
-    getGroupAndCounterList(GLuint **groupsList, int *numGroups, CounterInfo **counterInfo){
+    void getGroupAndCounterList(GLuint **groupsList, int *numGroups, CounterInfo **counterInfo){
         GLint          n;
         GLuint        *groups;
         CounterInfo   *counters;
@@ -228,9 +140,9 @@ inline uint32_t Reverse32(uint32_t value){
     static int  countersInitialized = 0;
         
     int getCounterByName(char *groupName, char *counterName, GLuint *groupID, GLuint *counterID){
-        int          numGroups;
-        GLuint       *groups;
-        CounterInfo  *counters;
+        static int          numGroups;
+        static GLuint       *groups;
+        static CounterInfo  *counters;
         int          i = 0;
         if (!countersInitialized){
             getGroupAndCounterList(&groups, &numGroups, &counters);
@@ -248,7 +160,7 @@ inline uint32_t Reverse32(uint32_t value){
         }
 
         if ( i == numGroups )
-            return -1;           // error - could not find the group name
+            exit(-1);           // error - could not find the group name
 
         for ( int j = 0; j < counters[i].numCounters; j++ ){
             char curCounterName[256];
@@ -260,12 +172,10 @@ inline uint32_t Reverse32(uint32_t value){
                 return 0;
             }
         }
-        return -1;           // error - could not find the counter name
+        exit(-1);           // error - could not find the counter name
     }
 
-    void drawFrameWithCounters(void){
-       
-        unsigned int* textures_data = (unsigned int*) malloc(2048 * 2048 * 4);
+void drawFrameWithCounters(void){
 	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	GLuint shaderProgram = glCreateProgram();
@@ -277,7 +187,6 @@ inline uint32_t Reverse32(uint32_t value){
     char infoLog[512];
 	uint32_t rndX = rand() & 0b11111, rndY = rand() & 0b11111;
 
-	memset(textures_data, 0x41, 4096);
 	memset(readval, 0xaa, 32 * 32 * sizeof(unsigned int));
 	GLuint VBO, tex, tex2;
 	// while(1){
@@ -317,27 +226,11 @@ inline uint32_t Reverse32(uint32_t value){
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	
-	// FRAMEBUFFER
-	glGenFramebuffers(1, &FBF);
-	glBindFramebuffer(GL_FRAMEBUFFER, FBF);
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0); 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
-		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!\n";
-	}
-
 	// TEXTURE
 	glGenTextures(1, &tex2);
 	glBindTexture(GL_TEXTURE_2D, tex2);
 	uint32_t ttmp = rndX + rndY;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -348,52 +241,39 @@ inline uint32_t Reverse32(uint32_t value){
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(shaderProgram);
-	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd");
-	glUniform2f(tex_uniform_location, rndX / 32.f,  rndY / 32.f);
-	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd2");
-	glUniform2f(tex_uniform_location, rndX,  rndY);
 	glBindTexture(GL_TEXTURE_2D, tex2);
 
-	 GLuint group[2];
-        GLuint counter[2];
-        GLuint monitor;
-        GLuint *counterData;
+	GLuint group[2];
+    GLuint counter[2];
+    GLuint monitor;
+    GLuint *counterData;
 
-        // Get group/counter IDs by name.  Note that normally the
-        // counter and group names need to be queried for because
-        // each implementation of this extension on different hardware
-        // could define different names and groups.  This is just provided
-        // to demonstrate the API.
-		// getCounterByName("TP", "TPL1_TPPERF_TP0_L1_MISSES", &group[0], &counter[0]);
-    // getCounterByName("TP", "TPL1_TPPERF_TP1_L1_MISSES", &groupID[0], &counterID[1]);
-    // getCounterByName("TP", "TPL1_TPPERF_TP2_L1_MISSES", &groupID[0], &counterID[2]);
-    // getCounterByName("TP", "TPL1_TPPERF_TP3_L1_MISSES", &groupID[0], &counterID[3]);
-    // getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[0], &counter[1]);
-        getCounterByName("UCHE", "UCHE_UCHEPERF_VBIF_READ_BEATS_TP", &group[0],&counter[0]);
-        // getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[0],&counter[0]);
-        // getCounterByName("API", "Draw Calls", &group[1], &counter[1]);
-        // create perf monitor ID
-        glGenPerfMonitorsAMD(1, &monitor);
-        // enable the counters
-        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1 ,&counter[0]);
-        // glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1, &counter[1]);
+    // ========================================= L1 CACHE RE =========================================
+    printf(" ========================================= L1 CACHE RE =========================================\n");
+    getCounterByName("TP", "TPL1_TPPERF_TP0_L1_MISSES", &group[0],&counter[0]);
+    getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
+    glGenPerfMonitorsAMD(1, &monitor);
+    for(size_t maxval = 4; maxval < 500; maxval += 4){
+        printf("%lu,", maxval);
+        tex_uniform_location = glGetUniformLocation(shaderProgram, "MAX");
+	    glUniform1i(tex_uniform_location, maxval);
+        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1 ,&counter[0]);   
+        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1 ,&counter[1]);   
         glBeginPerfMonitorAMD(monitor);
-
-
-	glDrawArrays(GL_POINTS, 0, 1);
+        glDrawArrays(GL_POINTS, 0, 1);
         glEndPerfMonitorAMD(monitor);
         // read the counters
         GLint resultSize;
         usleep(1000);
-		glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
-		if(!resultSize){
-			printf("RESULTSIZE == 0...\n");
-			return;
-		}
+        glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
+        if(!resultSize){
+            printf("RESULTSIZE == 0...\n");
+            return;
+        }
         counterData = (GLuint*) malloc(resultSize);
         GLsizei bytesWritten;
         glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_AMD,  resultSize, counterData, &bytesWritten);
-		printf("COUNTER DATA HAS SIZE OF %lu / %lu\n", bytesWritten, resultSize);
+        // printf("COUNTER DATA HAS SIZE OF %lu / %lu\n", bytesWritten, resultSize);
         // display or log counter info
         GLsizei wordCount = 0;
 
@@ -404,25 +284,88 @@ inline uint32_t Reverse32(uint32_t value){
             GLuint counterType;
             glGetPerfMonitorCounterInfoAMD(groupId, counterId, GL_COUNTER_TYPE_AMD, &counterType);
             if ( counterType == GL_UNSIGNED_INT64_AMD ){
-                GLuint64 counterResult = *(GLuint64*)(&counterData[wordCount + 2]);
-				uint32_t tmp_counterResult = counterResult;
+                GLuint counterResult = *(GLuint*)(&counterData[wordCount + 2]);
+                // uint64_t tmp_counterResult = counterResult;
                 // Print counter result
-				printf("COUNTER TYPE INT64 %u\n", tmp_counterResult);
+                printf(" %u,", counterResult);
                 // Print counter result
                 wordCount += 4;
             } else if(counterType == GL_UNSIGNED_INT){
-				GLuint counterResult = *(GLuint*)(&counterData[wordCount + 2]);
-				size_t tmp_counterResult = counterResult;
+                GLuint counterResult = *(GLuint*)(&counterData[wordCount + 2]);
+                size_t tmp_counterResult = counterResult;
                 // Print counter result
-				printf("COUNTER TYPE INT %d\n", tmp_counterResult);
+                printf(" %d\n", tmp_counterResult);
                 // Print counter result
                 wordCount += 3;
-			}
-            // else if ( ... ) check for other counter types 
-            //   (GL_UNSIGNED_INT and GL_PERCENTAGE_AMD)
+            }
         }
-		printf("RESULT %lu\n", *counterData);
+        printf("\n");
+    }   
+    
+
+    // =========================================== UCHE RE =================================================
+    printf("=========================================== UCHE RE =================================================\n");
+    getCounterByName("VBIF", "AXI_READ_REQUESTS_TOTAL", &group[0],&counter[0]);
+    getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
+    glGenPerfMonitorsAMD(1, &monitor);
+    for(size_t maxval = 100; maxval < 5200; maxval += 100){
+        printf("%lu,", maxval);
+        tex_uniform_location = glGetUniformLocation(shaderProgram, "MAX");
+	    glUniform1i(tex_uniform_location, maxval);
+        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1 ,&counter[0]);   
+        glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1 ,&counter[1]);   
+        glBeginPerfMonitorAMD(monitor);
+        glDrawArrays(GL_POINTS, 0, 1);
+        glEndPerfMonitorAMD(monitor);
+        // read the counters
+        GLint resultSize;
+        usleep(1000);
+        glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
+        if(!resultSize){
+            printf("RESULTSIZE == 0...\n");
+            return;
+        }
+        counterData = (GLuint*) malloc(resultSize);
+        GLsizei bytesWritten;
+        glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_AMD,  resultSize, counterData, &bytesWritten);
+        // printf("COUNTER DATA HAS SIZE OF %lu / %lu\n", bytesWritten, resultSize);
+        // display or log counter info
+        GLsizei wordCount = 0;
+
+        while ( (4 * wordCount) < bytesWritten ){
+            GLuint groupId = counterData[wordCount];
+            GLuint counterId = counterData[wordCount + 1];
+            // Determine the counter type
+            GLuint counterType;
+            glGetPerfMonitorCounterInfoAMD(groupId, counterId, GL_COUNTER_TYPE_AMD, &counterType);
+            if ( counterType == GL_UNSIGNED_INT64_AMD ){
+                GLuint counterResult = *(GLuint*)(&counterData[wordCount + 2]);
+                // uint64_t tmp_counterResult = counterResult;
+                // Print counter result
+                if(wordCount > 0)
+                    counterResult -= 36;
+                printf(" %u,", counterResult);
+                // Print counter result
+                wordCount += 4;
+            } else if(counterType == GL_UNSIGNED_INT){
+                GLuint counterResult = *(GLuint*)(&counterData[wordCount + 2]);
+                size_t tmp_counterResult = counterResult;
+                // Print counter result
+                printf(" %d\n", tmp_counterResult);
+                // Print counter result
+                wordCount += 3;
+            }
+        }
+        printf("\n");
+    }   
+
+
+
+
+    // printf("RESULT %lu\n", *counterData);
 	// printf("READVALS: \n");
+    // unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
+	// memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
 	// for(int  i = 0; i < 32; ++i){
 	// 	for( int j = 0; j < 32; ++j){
 	// 		printf("%2d ", frame[i * 32 + j]);
