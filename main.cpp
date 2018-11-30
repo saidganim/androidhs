@@ -312,7 +312,7 @@ void drawFrameWithCounters(void){
     // getCounterByName("UCHE", "UCHE_UCHEPERF_VBIF_READ_BEATS_TP", &group[0],&counter[0]);
     getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
     glGenPerfMonitorsAMD(1, &monitor);
-    for(size_t maxval = 64; maxval < 32768 / 4; maxval *= 2){
+    for(size_t maxval = 64; maxval <= 32768 / 2; maxval *= 2){
         printf("%lu,", maxval * 4);
         tex_uniform_location = glGetUniformLocation(shaderProgram, "MAX");
 	    glUniform1i(tex_uniform_location, maxval);
