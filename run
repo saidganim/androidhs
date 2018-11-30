@@ -1,0 +1,5 @@
+export STATIC_READ_AMOUNT=38 # For Galaxy A5
+./build
+adb push obj/local/armeabi-v7a/main.out /data/local/tmp/mike/main.out
+adb shell  '/data/local/tmp/mike/main.out'
+

@@ -14,10 +14,6 @@ EGLDisplay display;
 EGLSurface pBuffer;
 EGLContext ctx;
 
-#ifndef STATIC_READ_AMOUNT
-#define STATIC_READ_AMOUNT 38
-#endif
-
 typedef void (*glGetPerfMonitorGroupsAMD_t)(int*, size_t , uint*);
 typedef void (*glGetPerfMonitorCounterStringAMD_t)(uint, uint, size_t, size_t*, char*);
 typedef void (*glGetPerfMonitorGroupStringAMD_t)(uint, size_t, size_t*, char*);
