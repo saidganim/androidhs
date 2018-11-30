@@ -42,7 +42,27 @@ typedef struct{
     int         maxActiveCounters;
 } CounterInfo;
 
-const char *fragmentShaderSource = 
+const char *fragmentShaderSource = "#version 300 es\n"    
+    "layout (location = 0) in vec3 aPos;\n"
+    "uniform sampler2D tex;\n"
+    "uniform int MAX;\n"
+    "out vec4 val;\n"
+    "void main() {\n"
+    "ivec2 texCoord;\n"
+    // "val += texelFetch(tex, ivec2(0,0), 0);\n"
+    // "val += texelFetch(tex, ivec2(1,0), 0);\n"
+    "for (int i=0; i<2; i++) {\n"
+    "    for (int f=0; f < MAX; f += 16) { \n" // f=[0; 1024] // 4 or 16
+    "        texCoord.x = (int(f%4) + int(int(f%1024)/16) * 4);\n" // 16.0 - 1.0;\n"
+    // "        texCoord.x = f;\n" // 16.0 - 1.0;\n"
+    "        texCoord.y = (int(int(f%16) / 4) + int(f/1024)*4);\n" // 16.0 - 1.0;\n"
+    // "        texCoord.y = 0;\n" // 16.0 - 1.0;\n"
+    "        val += texelFetch(tex, texCoord, 0);\n"
+    "    }\n"
+    "}\n"
+    // "gl_Position = val;\n"
+    "}\n";
+/*
     "#version 300 es\n"
 	"#define STRIDE 4 // access stride\n"
 	"uniform sampler2D tex;\n"
@@ -63,6 +83,7 @@ const char *fragmentShaderSource =
 	"       }\n"
 	"   }\n"
 	"}\n\0";
+    */
 
 const char *vertexShaderSource = "#version 300 es\n"
     "void main(){\n"
@@ -235,7 +256,7 @@ void drawFrameWithCounters(void){
 	glGenTextures(1, &tex2);
 	glBindTexture(GL_TEXTURE_2D, tex2);
 	uint32_t ttmp = rndX + rndY;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -258,7 +279,7 @@ void drawFrameWithCounters(void){
     getCounterByName("TP", "TPL1_TPPERF_TP0_L1_MISSES", &group[0],&counter[0]);
     getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
     glGenPerfMonitorsAMD(1, &monitor);
-    for(size_t maxval = 100; maxval < 500; maxval += 4){
+    for(size_t maxval = 100; maxval < 1500; maxval += 100){
         printf("%lu,", maxval);
         tex_uniform_location = glGetUniformLocation(shaderProgram, "MAX");
 	    glUniform1i(tex_uniform_location, maxval);
@@ -349,7 +370,7 @@ void drawFrameWithCounters(void){
                 // uint64_t tmp_counterResult = counterResult;
                 // Print counter result
                 if(wordCount > 0)
-                    counterResult -= 25;
+                    counterResult -= 38;
                 printf(" %u,", counterResult);
                 // Print counter result
                 wordCount += 4;
