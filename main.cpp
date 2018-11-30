@@ -14,6 +14,10 @@ EGLDisplay display;
 EGLSurface pBuffer;
 EGLContext ctx;
 
+#ifndef STATIC_READ_AMOUNT
+#define STATIC_READ_AMOUNT 38
+#endif
+
 typedef void (*glGetPerfMonitorGroupsAMD_t)(int*, size_t , uint*);
 typedef void (*glGetPerfMonitorCounterStringAMD_t)(uint, uint, size_t, size_t*, char*);
 typedef void (*glGetPerfMonitorGroupStringAMD_t)(uint, size_t, size_t*, char*);
@@ -48,42 +52,15 @@ const char *fragmentShaderSource = "#version 300 es\n"
     "uniform int MAX;\n"
     "out vec4 val;\n"
     "void main() {\n"
-    "ivec2 texCoord;\n"
-    // "val += texelFetch(tex, ivec2(0,0), 0);\n"
-    // "val += texelFetch(tex, ivec2(1,0), 0);\n"
-    "for (int i=0; i<2; i++) {\n"
-    "    for (int f=0; f < MAX; f += 16) { \n" // f=[0; 1024] // 4 or 16
-    "        texCoord.x = (int(f%4) + int(int(f%1024)/16) * 4);\n" // 16.0 - 1.0;\n"
-    // "        texCoord.x = f;\n" // 16.0 - 1.0;\n"
-    "        texCoord.y = (int(int(f%16) / 4) + int(f/1024)*4);\n" // 16.0 - 1.0;\n"
-    // "        texCoord.y = 0;\n" // 16.0 - 1.0;\n"
-    "        val += texelFetch(tex, texCoord, 0);\n"
-    "    }\n"
-    "}\n"
-    // "gl_Position = val;\n"
+    "   ivec2 texCoord;\n"
+    "   for (int i=0; i<2; i++) {\n"
+    "       for (int f=0; f < MAX; f += 16) { \n"
+    "           texCoord.x = (f%1024) / 4;\n" 
+    "           texCoord.y = (f/1024) * 4;\n"
+    "           val += texelFetch(tex, texCoord, 0);\n"
+    "       }\n"
+    "   }\n"
     "}\n";
-/*
-    "#version 300 es\n"
-	"#define STRIDE 4 // access stride\n"
-	"uniform sampler2D tex;\n"
-    "uniform int MAX; \n"
-	"out vec4 val;\n"
-	"void main() {\n"
-	"   ivec2 texCoord;\n"
-	"   // external loop not required for (a)\n"
-	"   for (int i=0; i<2; i++) {\n"
-	"       for (int x=0; x < MAX; x += 4) {\n"
-
-	"        texCoord.x = x % 2048;\n"
-    "        texCoord.y =  x;\n"
-    
-    // "           texCoord.x = (x % 1024);\n"
-	// "           texCoord.y = (x / 1024);\n"
-	"           val += texelFetch(tex, ivec2(texCoord),0);\n"
-	"       }\n"
-	"   }\n"
-	"}\n\0";
-    */
 
 const char *vertexShaderSource = "#version 300 es\n"
     "void main(){\n"
@@ -370,7 +347,7 @@ void drawFrameWithCounters(void){
                 // uint64_t tmp_counterResult = counterResult;
                 // Print counter result
                 if(wordCount > 0)
-                    counterResult -= 38;
+                    counterResult -= STATIC_READ_AMOUNT; // 25 for NEXUS 5; 38 for Galaxy A5
                 printf(" %u,", counterResult);
                 // Print counter result
                 wordCount += 4;
@@ -385,22 +362,7 @@ void drawFrameWithCounters(void){
         }
         printf("\n");
     }   
-
-
-
-
-    // printf("RESULT %lu\n", *counterData);
-	// printf("READVALS: \n");
-    // unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
-	// memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
-	// for(int  i = 0; i < 32; ++i){
-	// 	for( int j = 0; j < 32; ++j){
-	// 		printf("%2d ", frame[i * 32 + j]);
-				
-	// 	}
-	// 	printf("\n");
-	// }
-    }
+}
 
 
 int main(){

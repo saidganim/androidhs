@@ -1,1 +1,2 @@
+export STATIC_READ_AMOUNT=25
 prun -np 1 -native '-p expq -C [glitch|drammer]' bash ./startup
