@@ -72,6 +72,13 @@ const char *fragmentShaderSource = "#version 300 es\n"
     "FragColor =  texelFetch(u_texture, ivec2(a_rnd2), 0);\n"
     "}\n\0";
 
+const char *hammeringShaderSource = "#version 300 es\n"
+	"uniform sampler2D u_texture;\n"
+	"void main(){\n"
+	"	//bla bla blai\n"
+	"}\n\0";
+
+
 
 void egl_setup() {
     int maj, min;
@@ -173,10 +180,10 @@ int main(){
 	FILE* pagemap_f2 = fopen("/proc/self/pagemap", "r");
 	FILE*  progout = fopen("/data/local/tmp/mike/prog.out", "w");
 	char kgsl_path[100]; // no buffer overwlof here, please:)
-	struct kgsl_entry *kgsl_arr = NULL;
-	struct kgsl_entry kgsl_cur;
 	struct kgsl_entry* kgsl_result[1000];
 	size_t cont_kgsls = 0;
+	struct kgsl_entry *kgsl_arr = NULL;
+	struct kgsl_entry kgsl_cur;
 	pid_t self = getpid();
 	sprintf(kgsl_path, "/d/kgsl/proc/%d/mem", self);
 	FILE* kgsl_f = fopen(kgsl_path, "r");
@@ -186,7 +193,7 @@ int main(){
 	printf("SELF ID : %d\n", self);
 	// STAGE #1
 
-	memset(textures_data, 0x41, 4096);
+	memset(textures_data, 0xff, 4096);
 	memset(readval, 0xaa, 32 * 32 * sizeof(unsigned int));
 	GLuint VBO, tex, tex2[150000];
 	// while(1){
@@ -242,12 +249,11 @@ int main(){
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!\n";
 	}
 	uint32_t ttmp = 0;
-	// TEXTURE
 	for(int i = 0; i < 50000; ++i){
 		glGenTextures(1, &tex2[i]);
 		glBindTexture(GL_TEXTURE_2D, tex2[i]);
 		ttmp = ttmp + rndX + rndY;
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -327,9 +333,9 @@ int main(){
 				unsigned int counter2 = counter;
 				while (counter2 >>= 1) ++target_level;
 				//fprintf(progout, "NEW GROUP OF TEXTURES: \n");
+				kgsl_result[cont_kgsls++] = first;
 				for(int i = 0; i < counter; ++i){
 					kgsl_cur = *first;
-					kgsl_result[cont_kgsls++] = first;
 					fprintf(progout, "mike,%d,%p,%p,%d\n", kgsl_cur.kgsl_id, kgsl_cur.kgsl_va, kgsl_cur.kgsl_pa, target_level); // only looks for order == 6
 					first = first->kgsl_next;
 				}
@@ -346,10 +352,12 @@ int main(){
 	while(int readsize = fread(filebuffer, 1, 1024, pagemap_f2)){
 		fwrite(filebuffer, 1 , 1024, pagemap_csv);
 	};
-
-	for(size_t i = 0; i < cont_kgsls; ++i)
-		printf("%p\n", kgsl_result[i]);
 	
+	for(size_t i = 1/* I am using first contigious area always for evicting caches */; i < cont_kgsls; ++i){
+		// Hammering two rows...
+		
+	}	
+	printf("RESULT NUMBER IS %u\n", cont_kgsls);
 	fclose(pagemap_csv);
 	fclose(kgsl_csv);
 	fclose(progout);
