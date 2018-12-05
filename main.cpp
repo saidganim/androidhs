@@ -180,13 +180,6 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"uniform sampler2D evict6;\n" //  has size of 64 regular pages, needed to evict caches
 	"uniform sampler2D evict7;\n" //  has size of 64 regular pages, needed to evict caches
 	"uniform sampler2D evict8;\n" //  has size of 64 regular pages, needed to evict caches
-	"uniform sampler2D evict9;\n" //  has size of 64 regular pages, needed to evict caches
-	"uniform sampler2D evict10;\n" //  has size of 64 regular pages, needed to evict caches
-	"uniform sampler2D evict11;\n" //  has size of 64 regular pages, needed to evict caches
-	"uniform sampler2D evict12;\n" //  has size of 64 regular pages, needed to evict caches
-	"uniform sampler2D evict13;\n" //  has size of 64 regular pages, needed to evict caches
-	"uniform sampler2D evict14;\n" //  has size of 64 regular pages, needed to evict caches
-	"uniform sampler2D evict15;\n" //  has size of 64 regular pages, needed to evict caches
 	"out vec4 val;\n"
 	"void main(){\n"
 	"	//int id = int(threadD.x) % 8;\n"
@@ -194,50 +187,25 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"		\n"
 	"		val += texelFetch(row1, ivec2( 0, 0), 0) + "
 	"		 texelFetch(row2, ivec2(0,0), 0) + "
+
 	"		 texelFetch(evict1, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict1, ivec2(0, 2), 0) + "
 	"		 texelFetch(evict2, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict3, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict4, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict5, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict6, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict7, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict8, ivec2(0, 0), 0) + "
+
+	"		 texelFetch(evict8, ivec2(0, 2), 0); \n"
+	"		 texelFetch(evict1, ivec2(0, 2), 0) + "
+	"		 texelFetch(evict7, ivec2(0, 2), 0) + "
+	"		 texelFetch(evict6, ivec2(0, 2), 0) + "
+	"		 texelFetch(evict5, ivec2(0, 2), 0) + "
+	"		 texelFetch(evict4, ivec2(0, 2), 0) + "
+	"		 texelFetch(evict3, ivec2(0, 2), 0) + "
 	"		 texelFetch(evict2, ivec2(0, 2), 0) + "
 
-	"		 texelFetch(evict3, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict3, ivec2(0, 2), 0) + "
-
-	"		 texelFetch(evict4, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict4, ivec2(0, 2), 0) + "
-
-	"		 texelFetch(evict5, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict5, ivec2(0, 2), 0) + "
-	
-//	"                texelFetch(evict10, ivec2(0, 0), 0) + "
-  //      "                texelFetch(evict10, ivec2(0, 2), 0) + "
-	
-//	"                texelFetch(evict11, ivec2(0, 0), 0) + "
-  //      "                texelFetch(evict11, ivec2(0, 2), 0) + "
-
-//	"                texelFetch(evict12, ivec2(0, 0), 0) + "
-  //      "                texelFetch(evict12, ivec2(0, 2), 0) + "
-
-//	"                texelFetch(evict13, ivec2(0, 0), 0) + "
-  //      "                texelFetch(evict13, ivec2(0, 2), 0) + "
-
-//	"                texelFetch(evict14, ivec2(0, 0), 0) + "
-  //      "                texelFetch(evict14, ivec2(0, 2), 0) + "
-
-//	"                texelFetch(evict15, ivec2(0, 0), 0) + "
-  //      "                texelFetch(evict15, ivec2(0, 2), 0) + "
-
-//	"                texelFetch(evict9, ivec2(0, 0), 0) + "
- //       "                texelFetch(evict9, ivec2(0, 2), 0) + "
-
-
-	"		 texelFetch(evict6, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict6, ivec2(0, 2), 0) + "
-
-	"		 texelFetch(evict7, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict7, ivec2(0, 2), 0) + "
-
-	"		 texelFetch(evict8, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict8, ivec2(0, 2), 0); \n"
 	"	}\n"
 	"	gl_Position = vec4(0.0, 0.0, 1.0, 1.0);\n"
 	"}\n\0";
@@ -597,8 +565,8 @@ int main(){
 		struct kgsl_entry* victim = row1;
 		for(int j = 0; j < 16; ++j){
 			victim = victim->kgsl_next;
-//			if( j < 8)
-			evictarr[j] = victim;
+			if( j < 4)
+				evictarr[j] = victim;
 		}
 
 		struct kgsl_entry* row2 = victim;
@@ -606,7 +574,14 @@ int main(){
 			row2 = row2->kgsl_next;
 		}
 		
-		for( int k = 0; k < 32; ++k){
+		struct kgsl_entry* currr = row2;
+		for( int i = 0; i < 4; ++i){
+			evictarr[4 + i] = currr->kgsl_next;
+			currr = currr->kgsl_next;
+		}
+
+ 
+		for( int k = 0; k < 32; k += 4){
 			// Hammering two rows...
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
@@ -678,41 +653,7 @@ int main(){
 			glActiveTexture(GL_TEXTURE0 + 9); // eviction Texture Unit
 			glBindTexture(GL_TEXTURE_2D, evictarr[7]->kgsl_id);
 		
-			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict9");
-			glUniform1i(evictionTexLocation,  10);
-			glActiveTexture(GL_TEXTURE0 + 10); // eviction Texture Unit
-			glBindTexture(GL_TEXTURE_2D, evictarr[8]->kgsl_id);
 			
-			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict10");
-			glUniform1i(evictionTexLocation,  11);
-			glActiveTexture(GL_TEXTURE0 + 11); // eviction Texture Unit
-			glBindTexture(GL_TEXTURE_2D, evictarr[9]->kgsl_id);
-	
-			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict11");
-			glUniform1i(evictionTexLocation,  12);
-			glActiveTexture(GL_TEXTURE0 + 12); // eviction Texture Unit
-			glBindTexture(GL_TEXTURE_2D, evictarr[10]->kgsl_id);
-	
-			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict12");
-			glUniform1i(evictionTexLocation,  13);
-			glActiveTexture(GL_TEXTURE0 + 13); // eviction Texture Unit
-			glBindTexture(GL_TEXTURE_2D, evictarr[11]->kgsl_id);
-	
-			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict13");
-                        glUniform1i(evictionTexLocation,  14);
-                        glActiveTexture(GL_TEXTURE0 + 14); // eviction Texture Unit
-                        glBindTexture(GL_TEXTURE_2D, evictarr[12]->kgsl_id);
-
-			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict14");
-                        glUniform1i(evictionTexLocation,  15);
-                        glActiveTexture(GL_TEXTURE0 + 15); // eviction Texture Unit
-                        glBindTexture(GL_TEXTURE_2D, evictarr[13]->kgsl_id);
-
-			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict15");
-                        glUniform1i(evictionTexLocation,  16);
-                        glActiveTexture(GL_TEXTURE0 + 16); // eviction Texture Unit
-                        glBindTexture(GL_TEXTURE_2D, evictarr[14]->kgsl_id);
-					
 			printf("Trying to hammer chunk %d : %d\n", i, k);
 			
 			row1TexLocation = glGetUniformLocation(shaderProgram2, "border");;
@@ -794,9 +735,25 @@ int main(){
 			for(int i = 0; i < 32 * 32; ++i) if(frame2[i] != 0xff000000)printf("FRAMEBUFFER: 0x%x - [%d:%d]\n", frame2[i],  i % 32, i / 32);
 			
 			free(frame2);
-			row1 = row1->kgsl_next;
-			row2 = row2->kgsl_next;
-			victim = victim->kgsl_next;
+			row1 = row1->kgsl_next->kgsl_next->kgsl_next->kgsl_next;
+			struct kgsl_entry* victim = row1;
+			for(int j = 0; j < 16; ++j){
+				victim = victim->kgsl_next;
+				if( j < 4)
+					evictarr[j] = victim;
+			}
+
+			struct kgsl_entry* row2 = victim;
+			for(int j = 0; j < 16; ++j){
+				row2 = row2->kgsl_next;
+			}
+			
+			struct kgsl_entry* currr = row2;
+			for( int i = 0; i < 4; ++i){
+				evictarr[4 + i] = currr->kgsl_next;
+				currr = currr->kgsl_next;
+			}
+
 		}
 		
 		
