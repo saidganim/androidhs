@@ -184,7 +184,7 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"out vec4 FragColor;\n"
 	"void main(){\n"
 	"	int id = int(threadD.x) % 8;\n"
-	"	for(int i = 0; i <2; i++){\n"
+	"	for(int i = 0; i < 500; i++){\n"
 	"		\n"
 	"		FragColor += texelFetch(row1, ivec2( 0, 0), 0);\n"
 	"		FragColor += texelFetch(row2, ivec2(0,0), 0);\n"
@@ -343,6 +343,7 @@ int main(){
 	memset(readval, 0xaa, 32 * 32 * sizeof(unsigned int));
 	GLuint VBO, tex, tex2[TXTRNUM];
 	// while(1){
+	//textures_data[0] = textures_data[8] = 0xbada110c;
 	
 	std::cout<<"Generated value sum==" << rndX + rndY << " ; rndX==" << rndX << "; rndY==" << rndY << "\n";
 
@@ -664,7 +665,7 @@ int main(){
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 	        	glBeginPerfMonitorAMD(monitor);    
-			glDrawArrays(GL_POINTS, 0, 8);
+			glDrawArrays(GL_POINTS, 0, 1);
 		        glEndPerfMonitorAMD(monitor);
 			usleep(1000);
 	        	glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint*)&resultSize, NULL);
