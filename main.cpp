@@ -181,39 +181,37 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"uniform sampler2D evict7;\n" //  has size of 64 regular pages, needed to evict caches
 	"uniform sampler2D evict8;\n" //  has size of 64 regular pages, needed to evict caches
 	"uniform sampler2D evict9;\n" //  has size of 64 regular pages, needed to evict caches
-	"out vec4 FragColor;\n"
+	"out vec4 val;\n"
 	"void main(){\n"
-	"	int id = int(threadD.x) % 8;\n"
-	"	for(int i = 0; i < 500; i++){\n"
+	"	//int id = int(threadD.x) % 8;\n"
+	"	for(int i = 0; i < border; i++){\n"
 	"		\n"
-	"		FragColor += texelFetch(row1, ivec2( 0, 0), 0);\n"
-	"		FragColor += texelFetch(row2, ivec2(0,0), 0);\n"
-	"		\n"
-	"		FragColor += texelFetch(evict1, ivec2(0, 0), 0);\n"
-	"		FragColor += texelFetch(evict1, ivec2(0, 2), 0);\n"
+	"		val += texelFetch(row1, ivec2( 0, 0), 0) +"
+	"		 texelFetch(row2, ivec2(0,0), 0) + "
+	"		 texelFetch(evict1, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict1, ivec2(0, 2), 0) + "
+	"		 texelFetch(evict2, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict2, ivec2(0, 2), 0) + "
 
-	"		FragColor += texelFetch(evict2, ivec2(0, 0), 0);\n"
-	"		FragColor += texelFetch(evict2, ivec2(0, 2), 0);\n"
+	"		 texelFetch(evict3, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict3, ivec2(0, 2), 0) + "
 
-	"		FragColor += texelFetch(evict3, ivec2(0, 0), 0);\n"
-	"		FragColor += texelFetch(evict3, ivec2(0, 2), 0);\n"
+	"		 texelFetch(evict4, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict4, ivec2(0, 2), 0) + "
 
-	"		FragColor += texelFetch(evict4, ivec2(0, 0), 0);\n"
-	"		FragColor += texelFetch(evict4, ivec2(0, 2), 0);\n"
+	"		 texelFetch(evict5, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict5, ivec2(0, 2), 0) + "
 
-	"		FragColor += texelFetch(evict5, ivec2(0, 0), 0);\n"
-	"		FragColor += texelFetch(evict5, ivec2(0, 2), 0);\n"
+	"		 texelFetch(evict6, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict6, ivec2(0, 2), 0) + "
 
-	"		FragColor += texelFetch(evict6, ivec2(0, 0), 0);\n"
-	"		FragColor += texelFetch(evict6, ivec2(0, 2), 0);\n"
+	"		 texelFetch(evict7, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict7, ivec2(0, 2), 0) + "
 
-	"		FragColor += texelFetch(evict7, ivec2(0, 0), 0);\n"
-	"		FragColor += texelFetch(evict7, ivec2(0, 2), 0);\n"
-
-	"		FragColor += texelFetch(evict8, ivec2(0, 0), 0);\n"
-	"		FragColor += texelFetch(evict8, ivec2(0, 2), 0);\n"
+	"		 texelFetch(evict8, ivec2(0, 0), 0) + "
+	"		 texelFetch(evict8, ivec2(0, 2), 0); \n"
 	"	}\n"
-	//"	FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n"
+	"	gl_Position = vec4(0.0, 0.0, 1.0, 1.0);\n"
 	"}\n\0";
 
 const char *hammeringVertexShaderSource = "#version 300 es\n"
@@ -224,6 +222,12 @@ const char *hammeringVertexShaderSource = "#version 300 es\n"
 	"}\0";
 
 
+const char *hammeringFragmetShaderSource = "#version 300 es\n"
+	"in vec4 val;\n"
+	"out vec4 FragColor;\n"
+	"void main(){\n"
+	"	FragColor = val;\n"
+	"}\n";
 
 void egl_setup() {
     int maj, min;
@@ -521,7 +525,7 @@ int main(){
 		
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &hammeringVertexShaderSource, NULL);
+	glShaderSource(vertexShader, 1, &hammeringShaderSource, NULL);
 	glCompileShader(vertexShader);
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
 
@@ -531,7 +535,7 @@ int main(){
 	}
 
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &hammeringShaderSource, NULL);
+	glShaderSource(fragmentShader, 1, &hammeringFragmetShaderSource, NULL);
 	glCompileShader(fragmentShader);   	
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
 	if (success != GL_TRUE)
