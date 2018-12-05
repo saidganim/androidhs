@@ -168,6 +168,7 @@ const char *fragmentShaderSource = "#version 300 es\n"
     "}\n\0";
 
 const char *hammeringShaderSource = "#version 300 es\n"
+	"#pragma optimize(off)\n"
 	"uniform sampler2D row1;\n"
 	"uniform sampler2D row2;\n"
 	"uniform int border;\n"
@@ -185,26 +186,29 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"	//int id = int(threadD.x) % 8;\n"
 	"	for(int i = 0; i < border; i++){\n"
 	"		\n"
-	"		val += texelFetch(row1, ivec2( 0, 0), 0) + "
-	"		 texelFetch(row2, ivec2(0,0), 0) + "
+	"		val += texelFetch(row1, ivec2( 0, 0), 0); \n "
+	"		 val += texelFetch(row2, ivec2(0,0), 0) ;\n"
 
-	"		 texelFetch(evict1, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict2, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict3, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict4, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict5, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict6, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict7, ivec2(0, 0), 0) + "
-	"		 texelFetch(evict8, ivec2(0, 0), 0) + "
+	"		 val += texelFetch(evict1, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict5, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict2, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict6, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict3, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict7, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict4, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict8, ivec2(0, 0), 0) ;\n "
 
-	"		 texelFetch(evict8, ivec2(0, 2), 0); \n"
-	"		 texelFetch(evict1, ivec2(0, 2), 0) + "
-	"		 texelFetch(evict7, ivec2(0, 2), 0) + "
-	"		 texelFetch(evict6, ivec2(0, 2), 0) + "
-	"		 texelFetch(evict5, ivec2(0, 2), 0) + "
-	"		 texelFetch(evict4, ivec2(0, 2), 0) + "
-	"		 texelFetch(evict3, ivec2(0, 2), 0) + "
-	"		 texelFetch(evict2, ivec2(0, 2), 0) + "
+	"		 val += texelFetch(row1, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(row2, ivec2(0, 2), 0) ;\n "
+
+	"		 val += texelFetch(evict1, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict5, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict2, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict6, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict3, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict7, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict4, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict8, ivec2(0, 2), 0); \n"
 
 	"	}\n"
 	"	gl_Position = vec4(0.0, 0.0, 1.0, 1.0);\n"
@@ -657,7 +661,7 @@ int main(){
 			printf("Trying to hammer chunk %d : %d\n", i, k);
 			
 			row1TexLocation = glGetUniformLocation(shaderProgram2, "border");;
-			glUniform1i(row1TexLocation, 1000000);			
+			glUniform1i(row1TexLocation, 1300000);			
 			// running the program
 			GLuint group[2];
 			GLuint counter[3];
@@ -713,44 +717,47 @@ int main(){
 				}
 			}
         	printf("\n");
-			
-			glBindFramebuffer(GL_FRAMEBUFFER, FBF);	
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, victim->kgsl_id, 0);
 			unsigned int* frame2  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
 			memset(frame2, 0x00, 32 * 32 * sizeof(unsigned int));
+
+			glBindFramebuffer(GL_FRAMEBUFFER, FBF);	
+		for(int vic = 0; vic < 4; ++vic){	
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, victim->kgsl_id, 0);
 			glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
 			printf("READVALS: \n");
 			for(int  i = 0; i < 32; ++i){
 				for( int j = 0; j < 32; ++j){
 					if(frame2[i * 32 + j] != 0xffffffff)
-						printf("FOUND BITFLIP %x on position %d\n", frame2[i * 32 + j], i * 32 + j, bitflips++);
+						printf("< ============== > FOUND BITFLIP %x on position %d\n", frame2[i * 32 + j], i * 32 + j, bitflips++);
 				//	else
 				//		printf("NO BITFLIP %x\n", frame2[i * 32 + j]);	
 				}
 			}
+			victim = victim->kgsl_next;
+		}
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0); 
-			memset(frame2, 0xaa, 32 * 32 * sizeof(unsigned int));
-			glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
-			for(int i = 0; i < 32 * 32; ++i) if(frame2[i] != 0xff000000)printf("FRAMEBUFFER: 0x%x - [%d:%d]\n", frame2[i],  i % 32, i / 32);
+			//memset(frame2, 0xaa, 32 * 32 * sizeof(unsigned int));
+			//glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
+			//for(int i = 0; i < 32 * 32; ++i) if(frame2[i] != 0xff000000)printf("FRAMEBUFFER: 0x%x - [%d:%d]\n", frame2[i],  i % 32, i / 32);
 			
 			free(frame2);
-			row1 = row1->kgsl_next->kgsl_next->kgsl_next->kgsl_next;
-			struct kgsl_entry* victim = row1;
+			row1 = row1->kgsl_next->kgsl_next->kgsl_next->kgsl_next->kgsl_next;
+			victim = row1;
 			for(int j = 0; j < 16; ++j){
 				victim = victim->kgsl_next;
 				if( j < 4)
 					evictarr[j] = victim;
 			}
 
-			struct kgsl_entry* row2 = victim;
+			row2 = victim;
 			for(int j = 0; j < 16; ++j){
 				row2 = row2->kgsl_next;
 			}
 			
 			struct kgsl_entry* currr = row2;
-			for( int i = 0; i < 4; ++i){
-				evictarr[4 + i] = currr->kgsl_next;
+			for( int ii = 0; ii < 4; ++ii){
+				evictarr[4 + ii] = currr->kgsl_next;
 				currr = currr->kgsl_next;
 			}
 
