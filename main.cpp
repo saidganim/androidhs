@@ -185,7 +185,7 @@ const char *fragmentShaderSource = "#version 300 es\n"
 								   "FragColor =  texelFetch(u_texture, ivec2(a_rnd2), 0);\n"
 								   "}\n\0";
 
-const char *hammeringShaderSource = "#version 300 es\n"
+const char *hammeringShaderSource2 = "#version 300 es\n"
 									"#pragma optimize(off)\n"
 									"uniform sampler2D row1;\n"
 									"uniform sampler2D row2;\n"
@@ -232,7 +232,7 @@ const char *hammeringShaderSource = "#version 300 es\n"
 									"	gl_Position = val;\n"
 									"}\n\0";
 
-const char *hammeringShaderSource2 = "#version 300 es\n"
+const char *hammeringShaderSource = "#version 300 es\n"
 									"#pragma optimize(off)\n"
 									"uniform sampler2D row1;\n"
 									"uniform sampler2D row2;\n"
