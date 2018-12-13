@@ -603,7 +603,7 @@ int main()
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
 	int bitflips = 0;
-	for (size_t i = 23; i < cont_kgsls; ++i)
+	for (size_t i = 3; i < cont_kgsls; ++i)
 	{
 		// preparing program to run
 		struct kgsl_entry *evictarr[15];
