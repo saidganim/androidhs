@@ -1,0 +1,27 @@
+This directory gives you all the necessary tools you need for the last week of glitch.
+
+You should start by running setup_venv.sh to setup the virtual environment for the python webserver.
+Afterwards you can run the web server by running the ./flask.sh. 
+
+## Remote firefox debugging
+
+To perform remote firefox debugging you need to tunnel the firefox debug interface over ssh. 
+
+That is: 
+
+DEBUG_PORT=13370 && ssh -L $DEBUG_PORT:127.0.0.1:$DEBUG_PORT das4
+... reserve node
+DEBUG_PORT=13370 && ssh -L $DEBUG_PORT:127.0.0.1:$DEBUG_PORT node00x
+
+Then move into the glitch_server directory
+
+source bin/activate
+./setup_ff.sh
+
+After you run setup_ff.sh the phone should be in shape to run your code. Then you can simply open the Firefox WebIDE (shift+F8) and connenct to the remote routine at localhost:$DEBUG_PORT
+
+
+
+
+
+
