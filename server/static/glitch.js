@@ -48,59 +48,57 @@ async function main() {
     var canvas = document.getElementById('triangleCanvas');
     var gl = canvas.getContext('webgl');
     gl.viewport(0,0,canvas.width,canvas.height);
-
-    var vertexShaderSource = "precision mediump float;\n"
-    "uniform sampler2D row1;\n"
-    "uniform sampler2D row2;\n"
-    "uniform int border;\n"
-    "//layout (location = 0) in vec3 threadD;\n"
-    "uniform sampler2D evict1[9];\n"  
-    "uniform sampler2D evict2;\n" 
-    "uniform sampler2D evict3;\n"
-    "uniform sampler2D evict4;\n"
-    "uniform sampler2D evict5;\n"
-    "uniform sampler2D evict6;\n"
-    "uniform sampler2D evict7;\n"
-    "uniform sampler2D evict8;\n"
-    "uniform sampler2D evict9;\n"
-    "uniform sampler2D evict10;\n"
-    "uniform sampler2D evict11;\n"
-    "uniform sampler2D evict12;\n"
-    "uniform int j;\n"
-    "uniform int k;\n"
-    "vec4 val;\n"
-    "void main(void){\n"
-    "	//int id = int(threadD.x) % 4;\n"
-    "	for(uint i = 0u; i < 1200000u; i++){\n"
-    "		\n"
-    "		 val += texelFetch(row1, ivec2(j, k), 0); \n "
-    "		 val += texelFetch(row2, ivec2(j, k), 0) ;\n "
-    "		 val += texelFetch(evict1[0], ivec2(j, k), 0) ;\n "
-    "		 val += texelFetch(evict1[6], ivec2(j, k), 0) ;\n "
-    "		 val += texelFetch(evict1[1], ivec2(j, k), 0) ;\n "
-    "		 val += texelFetch(evict1[7], ivec2(j, k), 0) ;\n "
-    "		 val += texelFetch(evict1[2], ivec2(j, k), 0) ;\n "
-    "		 val += texelFetch(evict1[8], ivec2(j, k), 0) ;\n "
-    "		 val += texelFetch(evict1[5], ivec2(j, k), 0) ;\n "
-
-    "		 val += texelFetch(row1, ivec2(j,k+2), 0) ;\n"
-    "		 val += texelFetch(row2, ivec2(j, k+2), 0) ;\n "
-    "		 val += texelFetch(evict1[0], ivec2(j, k+2), 0) ;\n "
-    "		 val += texelFetch(evict1[6], ivec2(j, k+2), 0) ;\n "
-    "		 val += texelFetch(evict1[1], ivec2(j, k+2), 0) ;\n "
-    "		 val += texelFetch(evict1[7], ivec2(j, k+2), 0) ;\n "
-    "		 val += texelFetch(evict1[2], ivec2(j, k+2), 0) ;\n "
-    "		 val += texelFetch(evict1[8], ivec2(j, k+2), 0) ;\n "
-    "		 val += texelFetch(evict1[5], ivec2(j, k+2), 0) ;\n "
-    "	}\n"
-    "	gl_Position = val;\n"
-    "}\n\0";
+    var vertexShaderSource = `precision mediump float;
+    niform sampler2D ro
+    niform sampler2D ro
+    niform int bord
+    //layout (location = 0) in vec3 threadD;
+    uniform sampler2D evict1[9];
+    uniform sampler2D evict2;
+    uniform sampler2D evict3;
+    uniform sampler2D evict4;
+    uniform sampler2D evict5;
+    uniform sampler2D evict6;
+    uniform sampler2D evict7;
+    uniform sampler2D evict8;
+    uniform sampler2D evict9;
+    uniform sampler2D evict10;
+    uniform sampler2D evict11;
+    uniform sampler2D evict12;
+    uniform int j;
+    uniform int k;
+    vec4 val;
+    void main(void){
+    	//int id = int(threadD.x) % 4;
+    	for(uint i = 0u; i < 1200000u; i++){
+    		
+    		 val += texelFetch(row1, ivec2(j, k), 0); 
+    		 val += texelFetch(row2, ivec2(j, k), 0) ;
+    		 val += texelFetch(evict1[0], ivec2(j, k), 0) ;
+    		 val += texelFetch(evict1[6], ivec2(j, k), 0) ;
+    		 val += texelFetch(evict1[1], ivec2(j, k), 0) ;
+    		 val += texelFetch(evict1[7], ivec2(j, k), 0) ;
+    		 val += texelFetch(evict1[2], ivec2(j, k), 0) ;
+    		 val += texelFetch(evict1[8], ivec2(j, k), 0) ;
+    		 val += texelFetch(evict1[5], ivec2(j, k), 0) ;
+    		 val += texelFetch(row1, ivec2(j,k+2), 0) ;
+    		 val += texelFetch(row2, ivec2(j, k+2), 0) ;
+    		 val += texelFetch(evict1[0], ivec2(j, k+2), 0) ;
+    		 val += texelFetch(evict1[6], ivec2(j, k+2), 0) ;
+    		 val += texelFetch(evict1[1], ivec2(j, k+2), 0) ;
+    		 val += texelFetch(evict1[7], ivec2(j, k+2), 0) ;
+    		 val += texelFetch(evict1[2], ivec2(j, k+2), 0) ;
+    		 val += texelFetch(evict1[8], ivec2(j, k+2), 0) ;
+    		 val += texelFetch(evict1[5], ivec2(j, k+2), 0) ;
+    	}
+    	gl_Position = val;
+    }`;
 
 
-    var fragmentShaderSource = "precision mediump float;\n"
-    "void main(void){\n"
-    "	FragColor = vec4(0.f, 0.f, 0.f, 1.f);\n"
-    "}\n";
+    var fragmentShaderSource = `precision mediump float;
+    void main(void){
+    	FragColor = vec4(0.f, 0.f, 0.f, 1.f);
+    }`;
     var vertShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertShader, vertexShaderSource);
     gl.compileShader(vertShader);
