@@ -309,31 +309,29 @@ async function main() {
     uniform sampler2D evict10;
     uniform sampler2D evict11;
     uniform sampler2D evict12;
-    uniform int j;
-    uniform int k;
     vec4 val;
     void main(void){
     	//int id = int(threadD.x) % 4;
     	for(int i = 0; i < 1200000; i++){
     		
-    		 val += texelFetch(row1, ivec2(j, k), 0); 
-    		 val += texelFetch(row2, ivec2(j, k), 0) ;
-    		 val += texelFetch(evict1[0], ivec2(j, k), 0) ;
-    		 val += texelFetch(evict1[6], ivec2(j, k), 0) ;
-    		 val += texelFetch(evict1[1], ivec2(j, k), 0) ;
-    		 val += texelFetch(evict1[7], ivec2(j, k), 0) ;
-    		 val += texelFetch(evict1[2], ivec2(j, k), 0) ;
-    		 val += texelFetch(evict1[8], ivec2(j, k), 0) ;
-    		 val += texelFetch(evict1[5], ivec2(j, k), 0) ;
-    		 val += texelFetch(row1, ivec2(j,k+2), 0) ;
-    		 val += texelFetch(row2, ivec2(j, k+2), 0) ;
-    		 val += texelFetch(evict1[0], ivec2(j, k+2), 0) ;
-    		 val += texelFetch(evict1[6], ivec2(j, k+2), 0) ;
-    		 val += texelFetch(evict1[1], ivec2(j, k+2), 0) ;
-    		 val += texelFetch(evict1[7], ivec2(j, k+2), 0) ;
-    		 val += texelFetch(evict1[2], ivec2(j, k+2), 0) ;
-    		 val += texelFetch(evict1[8], ivec2(j, k+2), 0) ;
-    		 val += texelFetch(evict1[5], ivec2(j, k+2), 0) ;
+    		 val += texelFetch(row1, ivec2(0, 0), 0); 
+    		 val += texelFetch(row2, ivec2(0, 0), 0) ;
+    		 val += texelFetch(evict1[0], ivec2(0, 0), 0) ;
+    		 val += texelFetch(evict1[6], ivec2(0, 0), 0) ;
+    		 val += texelFetch(evict1[1], ivec2(0, 0), 0) ;
+    		 val += texelFetch(evict1[7], ivec2(0, 0), 0) ;
+    		 val += texelFetch(evict1[2], ivec2(0, 0), 0) ;
+    		 val += texelFetch(evict1[8], ivec2(0, 0), 0) ;
+    		 val += texelFetch(evict1[5], ivec2(0, 0), 0) ;
+    		 val += texelFetch(row1, ivec2(0,0), 0) ;
+    		 val += texelFetch(row2, ivec2(0, 2), 0) ;
+    		 val += texelFetch(evict1[0], ivec2(0, 2), 0) ;
+    		 val += texelFetch(evict1[6], ivec2(0, 2), 0) ;
+    		 val += texelFetch(evict1[1], ivec2(0, 2), 0) ;
+    		 val += texelFetch(evict1[7], ivec2(0, 2), 0) ;
+    		 val += texelFetch(evict1[2], ivec2(0, 2), 0) ;
+    		 val += texelFetch(evict1[8], ivec2(0, 2), 0) ;
+    		 val += texelFetch(evict1[5], ivec2(0, 2), 0) ;
     	}
     	gl_Position = val;
     }`;
