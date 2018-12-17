@@ -107,6 +107,8 @@ async function main() {
     var vertShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertShader, vertexShaderSource);
     gl.compileShader(vertShader);
+    var compiled = gl.getShaderParameter(vertShader, gl.COMPILE_STATUS);
+    console.log("COMPILE ERROR : " + compiled)
     var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragShader, fragmentShaderSource);
     gl.compileShader(fragShader);
