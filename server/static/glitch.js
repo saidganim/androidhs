@@ -45,12 +45,11 @@ function fill_arrays(arr, len) {
 
 async function main() {
 
-    const canvas = document.getElementById('triangleCanvas');
-    const gl = canvas.getContext('webgl');
+    var canvas = document.getElementById('triangleCanvas');
+    var gl = canvas.getContext('webgl');
     gl.viewport(0,0,canvas.width,canvas.height);
 
-    const vertShader = gl.createShader(gl.VERTEX_SHADER);
-    const vertexShaderSource = "#version 300 es\n"
+    var vertexShaderSource = "#version 300 es\n"
     "#pragma optimize(off)\n"
     "uniform sampler2D row1;\n"
     "uniform sampler2D row2;\n"
@@ -99,18 +98,19 @@ async function main() {
     "}\n\0";
 
 
-    const fragmentShaderSource = "#version 300 es\n"
+    var fragmentShaderSource = "#version 300 es\n"
     //"in float val;\n"
     "out vec4 FragColor;\n"
     "void main(){\n"
     "	FragColor = vec4(0.f, 0.f, 0.f, 1.f);\n"
     "}\n";
+    var vertShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertShader, vertexShaderSource);
     gl.compileShader(vertShader);
-    const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+    var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragShader, fragmentShaderSource);
     gl.compileShader(fragShader);
-    const prog = gl.createProgram();
+    var prog = gl.createProgram();
     gl.attachShader(prog, vertShader);
     gl.attachShader(prog, fragShader);
     gl.linkProgram(prog);
