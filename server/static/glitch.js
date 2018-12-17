@@ -109,7 +109,7 @@ async function main() {
     gl.compileShader(vertShader);
     var compiled = gl.getShaderParameter(vertShader, gl.COMPILE_STATUS);
     if(!compiled){
-        var compilationLog = gl.getShaderInfoLog(shader);
+        var compilationLog = gl.getShaderInfoLog(vertShader);
         console.log('Shader compiler log: ' + compilationLog);
         return;
     }
@@ -120,7 +120,7 @@ async function main() {
     
     var compiled = gl.getShaderParameter(fragShader, gl.COMPILE_STATUS);
     if(!compiled){
-        var compilationLog = gl.getShaderInfoLog(shader);
+        var compilationLog = gl.getShaderInfoLog(fragShader);
         console.log('Shader compiler log: ' + compilationLog);
         return;
     }
