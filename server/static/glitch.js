@@ -108,10 +108,22 @@ async function main() {
     gl.shaderSource(vertShader, vertexShaderSource);
     gl.compileShader(vertShader);
     var compiled = gl.getShaderParameter(vertShader, gl.COMPILE_STATUS);
-    console.log("COMPILE ERROR : " + compiled)
+    if(!compiled){
+        var compilationLog = gl.getShaderInfoLog(shader);
+        console.log('Shader compiler log: ' + compilationLog);
+        return;
+    }
+    
     var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragShader, fragmentShaderSource);
     gl.compileShader(fragShader);
+    
+    var compiled = gl.getShaderParameter(fragShader, gl.COMPILE_STATUS);
+    if(!compiled){
+        var compilationLog = gl.getShaderInfoLog(shader);
+        console.log('Shader compiler log: ' + compilationLog);
+        return;
+    }
     var prog = gl.createProgram();
     gl.attachShader(prog, vertShader);
     gl.attachShader(prog, fragShader);
