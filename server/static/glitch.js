@@ -292,7 +292,8 @@ async function main() {
     var canvas = document.getElementById('triangleCanvas');
     var gl = canvas.getContext('webgl2');
     gl.viewport(0,0,canvas.width,canvas.height);
-    var vertexShaderSource = `precision mediump float;
+    var vertexShaderSource = `#version 300 es
+    precision mediump float;
     uniform sampler2D row1;
     uniform sampler2D row2;
     uniform int border;
@@ -337,7 +338,8 @@ async function main() {
     }`;
 
 
-    var fragmentShaderSource = `precision mediump float;
+    var fragmentShaderSource = `#version 300 es
+    precision mediump float;
     void main(void){
     	gl_FragColor = vec4(0., 0., 0., 1.);
     }`;
