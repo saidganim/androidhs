@@ -340,8 +340,9 @@ async function main() {
 
     var fragmentShaderSource = `#version 300 es
     precision mediump float;
+    out vec4 FragColor
     void main(void){
-    	gl_FragColor = vec4(0., 0., 0., 1.);
+    	FragColor = vec4(0., 0., 0., 1.);
     }`;
     var vertShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertShader, vertexShaderSource);
