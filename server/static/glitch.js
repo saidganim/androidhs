@@ -49,9 +49,7 @@ async function main() {
     var gl = canvas.getContext('webgl');
     gl.viewport(0,0,canvas.width,canvas.height);
 
-    var vertexShaderSource = "#ifdef GL_ES \n"
-    "precision mediump float;\n"
-    "#endif\n"
+    var vertexShaderSource = "precision mediump float;\n"
     "uniform sampler2D row1;\n"
     "uniform sampler2D row2;\n"
     "uniform int border;\n"
@@ -71,7 +69,7 @@ async function main() {
     "uniform int j;\n"
     "uniform int k;\n"
     "vec4 val;\n"
-    "void main(){\n"
+    "void main(void){\n"
     "	//int id = int(threadD.x) % 4;\n"
     "	for(uint i = 0u; i < 1200000u; i++){\n"
     "		\n"
@@ -99,10 +97,8 @@ async function main() {
     "}\n\0";
 
 
-    var fragmentShaderSource = "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "void main(){\n"
+    var fragmentShaderSource = "precision mediump float;\n"
+    "void main(void){\n"
     "	FragColor = vec4(0.f, 0.f, 0.f, 1.f);\n"
     "}\n";
     var vertShader = gl.createShader(gl.VERTEX_SHADER);
