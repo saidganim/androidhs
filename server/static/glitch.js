@@ -70,7 +70,7 @@ async function main() {
     vec4 val;
     void main(void){
     	//int id = int(threadD.x) % 4;
-    	for(uint i = 0u; i < 1200000u; i++){
+    	for(int i = 0; i < 1200000; i++){
     		
     		 val += texelFetch(row1, ivec2(j, k), 0); 
     		 val += texelFetch(row2, ivec2(j, k), 0) ;
