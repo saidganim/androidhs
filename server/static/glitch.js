@@ -290,7 +290,7 @@ async function main() {
     b = BrowserDetect;
     b.init();
     var canvas = document.getElementById('triangleCanvas');
-    var gl = canvas.getContext('webgl');
+    var gl = canvas.getContext('webgl2');
     gl.viewport(0,0,canvas.width,canvas.height);
     var vertexShaderSource = `precision mediump float;
     uniform sampler2D row1;
