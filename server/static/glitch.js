@@ -49,7 +49,8 @@ async function main() {
     var gl = canvas.getContext('webgl');
     gl.viewport(0,0,canvas.width,canvas.height);
 
-    var vertexShaderSource = "uniform sampler2D row1;\n"
+    var vertexShaderSource = "precision mediump float;\n"
+    "uniform sampler2D row1;\n"
     "uniform sampler2D row2;\n"
     "uniform int border;\n"
     "//layout (location = 0) in vec3 threadD;\n"
