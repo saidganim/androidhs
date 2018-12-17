@@ -49,9 +49,7 @@ async function main() {
     var gl = canvas.getContext('webgl');
     gl.viewport(0,0,canvas.width,canvas.height);
 
-    var vertexShaderSource = "#version 300 es\n"
-    "#pragma optimize(off)\n"
-    "uniform sampler2D row1;\n"
+    var vertexShaderSource = "uniform sampler2D row1;\n"
     "uniform sampler2D row2;\n"
     "uniform int border;\n"
     "//layout (location = 0) in vec3 threadD;\n"
@@ -98,9 +96,7 @@ async function main() {
     "}\n\0";
 
 
-    var fragmentShaderSource = "#version 300 es\n"
-    //"in float val;\n"
-    "out vec4 FragColor;\n"
+    var fragmentShaderSource = "precision mediump float;\n"
     "void main(){\n"
     "	FragColor = vec4(0.f, 0.f, 0.f, 1.f);\n"
     "}\n";
@@ -111,7 +107,7 @@ async function main() {
     if(!compiled){
         var compilationLog = gl.getShaderInfoLog(vertShader);
         console.log('Shader compiler log: ' + compilationLog);
-        return;
+        //return;
     }
     
     var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
