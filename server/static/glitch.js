@@ -291,6 +291,15 @@ var BrowserDetect = {
 // ========================== END OF STOLEN CODE :) ==================================
 
 
+function decimalToHexString(number)
+{
+  if (number < 0)
+  {
+    number = 0xFFFFFFFF + number + 1;
+  }
+
+  return number.toString(16).toUpperCase();
+}
 
 async function main() {
     // Initialization procedures
@@ -500,9 +509,8 @@ async function main() {
                         gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, frame);
                         for(var it = 0; it < 32 * 32 * 4; ++it)
                             if(frame[it] != 0xff){
-                                hexString = (frame[it]).toString(16);
-                                if (hexString.length % 2) {hexString = '0' + hexString;}
-                                console.log("BITFLIP FROM 0xff to 0x" + hexString)
+                                
+                                console.log("BITFLIP FROM 0xff to 0x" + decimalToHexString(frame[it]))
                             }
                     }
                 }
