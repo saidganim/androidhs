@@ -500,7 +500,7 @@ async function main() {
                         gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, frame);
                         for(var it = 0; it < 32 * 32 * 4; ++it)
                             if(frame[it] != 0xff){
-                                hexString = yourNumber.toString(16);
+                                hexString = frame[it].toString(16);
                                 if (hexString.length % 2) {hexString = '0' + hexString;}
                                 console.log("BITFLIP FROM 0xff to 0x" + hexString)
                             }
