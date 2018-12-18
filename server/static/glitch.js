@@ -419,6 +419,7 @@ async function main() {
         var kgslmap = []
         var counter = 1;
         for(var i = 1; i < kgsl.length; ++i){
+            console.log("DIFF : " + Number(kgsl[i].pfn) - Number(kgsl[i - 1].pfn));
             if(Number(kgsl[i].pfn) - Number(kgsl[i - 1].pfn) == 0x1000){
                 ++counter;
                 if(counter == 64){
