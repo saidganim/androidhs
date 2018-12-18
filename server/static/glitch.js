@@ -485,8 +485,9 @@ async function main() {
         
                 gl.clearColor(1, 0, 1, 1);
                 gl.clear(gl.COLOR_BUFFER_BIT);
-            
+                console.log("RUNNING ...")
                 gl.drawArrays(gl.TRIANGLES, 0, 3);
+                console.log("EXECUTED ..")
                 gl.bindFramebuffer(gl.FRAMEBUFFER, FBF);
                 for(var j = 0 ; j < 4; ++j){
                     // kgsl[kgslmap[i] + k + 16 + j].tex_id
