@@ -441,7 +441,7 @@ async function main() {
         for(var i = 0; i < kgslmap.length; ++i){
             for(var k = 0; k < 28; ++k){
                 gl.useProgram(prog);
-                
+                console.log("Hammering [" + i +" : " + k + "]");
                 // HAMMERED ROW
                 for(var j = 0 ; j < 4; ++j){
                     gl.bindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 16 + j].tex_id);
