@@ -454,38 +454,38 @@ async function main() {
     
                     // IDLE ROWS
                     var evictionTexLocation = gl.getUniformLocation(prog, "row1");
-                    glUniform1i(evictionTexLocation, 0);
-                    glActiveTexture(gl.TEXTURE0); // eviction Texture Unit
-                    glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k].tex_id - startID]);
-                    glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
+                    gl.uniform1i(evictionTexLocation, 0);
+                    gl.activeTexture(gl.TEXTURE0); // eviction Texture Unit
+                    gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k].tex_id - startID]);
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
                     
                     var evictionTexLocation2 = gl.getUniformLocation(prog, "row2");
-                    glUniform1i(evictionTexLocation, 1);
-                    glActiveTexture(gl.TEXTURE0 + 1); // eviction Texture Unit
-                    glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 32].tex_id - startID]);
-                    glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
+                    gl.uniform1i(evictionTexLocation, 1);
+                    gl.activeTexture(gl.TEXTURE0 + 1); // eviction Texture Unit
+                    gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 32].tex_id - startID]);
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
                     
                     for(var j = 0 ; j < 4; ++j){
                         var evictLoc = gl.getUniformLocation(prog, "evict[" + j + "]");
-                        glUniform1i(evictionTexLocation, 0);
-                        glActiveTexture(gl.TEXTURE0 + 2 + j); // eviction Texture Unit
-                        glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 1 + j].tex_id - startID]);
-                        glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
+                        gl.uniform1i(evictionTexLocation, 0);
+                        gl.activeTexture(gl.TEXTURE0 + 2 + j); // eviction Texture Unit
+                        gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 1 + j].tex_id - startID]);
+                        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
                     }
     
                     for(var j = 0 ; j < 4; ++j){
                         var evictLoc = gl.getUniformLocation(prog, "evict[" + 4 + j + "]");
-                        glUniform1i(evictionTexLocation, 0);
-                        glActiveTexture(gl.TEXTURE0 + 6 + j); // eviction Texture Unit
-                        glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 33 + j].tex_id - startID]);
-                        glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
+                        gl.uniform1i(evictionTexLocation, 0);
+                        gl.activeTexture(gl.TEXTURE0 + 6 + j); // eviction Texture Unit
+                        gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 33 + j].tex_id - startID]);
+                        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
                     }
     
                     var evictLoc = gl.getUniformLocation(prog, "evict[8]");
-                    glUniform1i(evictionTexLocation, 0);
-                    glActiveTexture(gl.TEXTURE0 + 10); // eviction Texture Unit
-                    glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 5].tex_id - startID]);
-                    glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
+                    gl.uniform1i(evictionTexLocation, 0);
+                    gl.activeTexture(gl.TEXTURE0 + 10); // eviction Texture Unit
+                    gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 5].tex_id - startID]);
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
             
                     gl.clearColor(1, 0, 1, 1);
                     gl.clear(gl.COLOR_BUFFER_BIT);
