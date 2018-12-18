@@ -381,7 +381,7 @@ async function main() {
     var texdata = []; // data has to be not null. could be on demand allocation
     for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) for(var bt = 0; bt < 4; ++bt) texdata.push(0xff)
     texdata = new Uint8Array(texdata);
-	for (var i = 0; i < 50000; ++i){
+	for (var i = 0; i < 20000; ++i){
 		texs.push(gl.createTexture())
 		gl.bindTexture(gl.TEXTURE_2D, texs[i]);
 		var level = 0;
@@ -419,7 +419,7 @@ async function main() {
         var kgslmap = []
         var counter = 1;
         for(var i = 1; i < kgsl.length; ++i){
-            if(kgsl[i].pfn - kgsl[i - 1].pfn == 0x1000){
+            if(Number(kgsl[i].pfn) - Number(kgsl[i - 1].pfn) == 0x1000){
                 ++counter;
                 if(counter == 64){
                     counter = 1;
