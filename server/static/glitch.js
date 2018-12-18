@@ -397,7 +397,7 @@ async function main() {
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 0, format, type, [0xffffffff,0xffffffff,0xffffffff]);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 0, format, type, new Uint8Array([0xffffffff,0xffffffff,0xffffffff]));
 	}
 
     // Since all textures are really allocated in DRAM, now it's time to identify contigious chunks of memory
