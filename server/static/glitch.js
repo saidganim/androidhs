@@ -379,7 +379,7 @@ async function main() {
     // Textures allocation
     var texs = [];
     var texdata = []; // data has to be not null. could be on demand allocation
-    for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) texdata.push(0xffffffff)
+    for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) for(var bt = 0; bt < 4; ++bt) texdata.push(0xff)
     texdata = new Uint8Array(texdata);
 	for (var i = 0; i < 50000; ++i){
 		texs.push(gl.createTexture())
