@@ -379,9 +379,9 @@ async function main() {
     // Textures allocation
     var texs = [];
     var texdata = []; // data has to be not null. could be on demand allocation
-    for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) texdata.append(0xffffffff)
+    for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) texdata.push(0xffffffff)
 	for (var i = 0; i < 50000; ++i){
-		texs.append(gl.createTexture())
+		texs.push(gl.createTexture())
 		gl.BindTexture(gl.TEXTURE_2D, texs[i]);
 		var level = 0;
         var internalFormat = gl.RGBA;
@@ -423,7 +423,7 @@ async function main() {
             ++counter;
             if(counter == 64){
                 counter = 1;
-                kgslmap.append(i - 64);
+                kgslmap.push(i - 64);
             }
         } 
     }
