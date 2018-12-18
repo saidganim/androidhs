@@ -513,7 +513,7 @@ async function main() {
                                 console.log("BITFLIP FROM 0xff to 0x" + (frame[it]))
                             }
                     }
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, 0);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 }
             }
         
