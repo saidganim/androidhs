@@ -432,6 +432,8 @@ async function main() {
                     counter = 1;
                     kgslmap.push(i - 64);
                 }
+            } else {
+                counter = 1;
             } 
         }
         console.log("Detected <" + kgslmap.length + "> contigious chunks...");
