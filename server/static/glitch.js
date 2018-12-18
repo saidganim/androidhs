@@ -477,7 +477,7 @@ async function main() {
 
                 var evictLoc = gl.getUniformLocation(prog, "evict[8]");
                 glUniform1i(evictionTexLocation, 0);
-                glActiveTexture(gl.TEXTURE0 + 10j); // eviction Texture Unit
+                glActiveTexture(gl.TEXTURE0 + 10); // eviction Texture Unit
                 glBindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 5].tex_id);
                 glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
         
