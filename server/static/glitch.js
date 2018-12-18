@@ -298,7 +298,7 @@ function decimalToHexString(number)
     number = 0xFFFFFFFF + number + 1;
   }
 
-  return number.toString(16).toUpperCase();
+  return Number(number).toString(16).toUpperCase();
 }
 
 async function main() {
