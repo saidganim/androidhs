@@ -382,7 +382,7 @@ async function main() {
     for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) texdata.push(0xffffffff)
 	for (var i = 0; i < 50000; ++i){
 		texs.push(gl.createTexture())
-		gl.BindTexture(gl.TEXTURE_2D, texs[i]);
+		gl.bindTexture(gl.TEXTURE_2D, texs[i]);
 		var level = 0;
         var internalFormat = gl.RGBA;
         var border = 0;
