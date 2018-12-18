@@ -512,6 +512,9 @@ async function main() {
                     for(var j = 0 ; j < 4; ++j){
                         // kgsl[kgslmap[i] + k + 16 + j].tex_id
                         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 16 + j].tex_id - startID], 0);
+                        while(gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+                            await sleep(10)
+                        }
                         frame = new Uint8Array(32*32*4);
                         gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, frame);
                         for(var it = 0; it < 32 * 32 * 4; ++it)
