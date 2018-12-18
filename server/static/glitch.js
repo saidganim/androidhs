@@ -434,7 +434,14 @@ async function main() {
             kgsl = kgsl.sort(function(a, b){return a.pfn > b.pfn}); // asc order by pfns
             var startID = 0xffffffffffff;
 
-            for(var ent in kgsl){if(startID > ent.tex_id) startID = ent.tex_id;}
+            for(var ent in kgsl){
+                if(old_kgsl.findIndex(function(element, index, arr){
+                        if(element.tex_id == ent.tex_id)
+                                return true;
+                }) >= 0) continue;
+                if(startID > ent.tex_id) startID = ent.tex_id;
+            }
+
             var kgslmap = []
             var counter = 1;
             for(var i = 1; i < kgsl.length; ++i){
