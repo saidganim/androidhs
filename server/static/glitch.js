@@ -510,7 +510,7 @@ async function main() {
                         for(var it = 0; it < 32 * 32 * 4; ++it)
                             if(frame[it] != 0xff){
                                 
-                                console.log("BITFLIP FROM 0xff to 0x" + decimalToHexString(frame[it]))
+                                console.log("BITFLIP FROM 0xff to 0x" + (frame[it]))
                             }
                     }
                 }
