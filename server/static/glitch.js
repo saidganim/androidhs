@@ -442,8 +442,8 @@ async function main() {
                 
                 // HAMMERED ROW
                 for(var j = 0 ; j < 4; ++j){
-                    glBindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 16 + j].tex_id);
-                    glTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, texdata);
+                    gl.bindTexture(gl.TEXTURE_2D, kgsl[kgslmap[i] + k + 16 + j].tex_id);
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, texdata);
                 }
 
                 // IDLE ROWS
