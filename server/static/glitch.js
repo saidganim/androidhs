@@ -361,22 +361,22 @@ async function hammer_chunk(mProgram, relative_chunk) {
     gl.bindTexture(gl.TEXTURE_2D, relative_chunk[0].native_texture);
 
     gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[1].native_texture);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[34].native_texture);
 
     gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[2].native_texture);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[1].native_texture);
 
     gl.activeTexture(gl.TEXTURE3);
-    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[3].native_texture);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[35].native_texture);
 
     gl.activeTexture(gl.TEXTURE4);
-    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[4].native_texture);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[2].native_texture);
 
     gl.activeTexture(gl.TEXTURE5);
-    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[5].native_texture);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[36].native_texture);
 
     gl.activeTexture(gl.TEXTURE6);
-    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[6].native_texture);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[3].native_texture);
 
     gl.activeTexture(gl.TEXTURE7);
     gl.bindTexture(gl.TEXTURE_2D, relative_chunk[32].native_texture);
