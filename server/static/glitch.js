@@ -390,7 +390,7 @@ async function main() {
         var type = gl.UNSIGNED_BYTE;
        
         gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                        targetTextureWidth, targetTextureHeight, border,
+                        32, 32, border,
                         format, type, texdata);
  
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
